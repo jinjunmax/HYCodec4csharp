@@ -1,0 +1,495 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="HYFontCodecCS.CBase" Collapsed="true">
+    <Position X="5.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAQAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAEAAA=</HashCode>
+      <FileName>CBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFCharset" Collapsed="true">
+    <Position X="7" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAACAAsAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFCharset.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFCSFormat0" Collapsed="true">
+    <Position X="8.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFCSFormat0.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFCSFormat1" Collapsed="true">
+    <Position X="10.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAA=</HashCode>
+      <FileName>CCFFCSFormat1.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFCSFormat2" Collapsed="true">
+    <Position X="12.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAA=</HashCode>
+      <FileName>CCFFCSFormat2.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFCSFormatRang1" Collapsed="true">
+    <Position X="14" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFCSFormatRang1.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFCSFormatRang2" Collapsed="true">
+    <Position X="15.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAIAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFCSFormatRang2.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFFDSelect" Collapsed="true">
+    <Position X="17.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAAAAAYAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFFDSelect.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFFDSFormat3" Collapsed="true">
+    <Position X="5.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAARAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFFDSFormat3.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFFDSRang3" Collapsed="true">
+    <Position X="7" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAABAA=</HashCode>
+      <FileName>CCFFFDSRang3.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFHeader" Collapsed="true">
+    <Position X="8.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAAAAAAAAAAAAQgAAAAAAAAIAA=</HashCode>
+      <FileName>CCFFHeader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFIndex" Collapsed="true">
+    <Position X="10.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAACAAAAAAAAAAQAAAAAAAQAAAgAAAAAAAA=</HashCode>
+      <FileName>CCFFIndex.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFInfo" Collapsed="true">
+    <Position X="12.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQBAAAAAAgEAAAAAARMAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFInfo.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFPrivteDict" Collapsed="true">
+    <Position X="14" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAQAAFQAAIAAAAAAAAAAIABEAgChAAAAAgAggEIBAEA=</HashCode>
+      <FileName>CCFFPrivteDict.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFROS" Collapsed="true">
+    <Position X="15.75" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAIAAAACAQAAAAAEAAAAAAAAAAAAAAAAEAAAA=</HashCode>
+      <FileName>CCFFROS.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFStandString" Collapsed="true">
+    <Position X="17.5" Y="1.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCFFStandString.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCFFTopDict" Collapsed="true">
+    <Position X="5.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAQXBAEFAAAgAAABAVGIAKQQBAEghABDgBgCAAqRMA=</HashCode>
+      <FileName>CCFFTopDict.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCharStringParam" Collapsed="true">
+    <Position X="7" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABAAAACAAAAAABgAAAQAIBAAAAAoAAgAAIACBAAAAgA=</HashCode>
+      <FileName>CCharStringParam.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_ENCODE_FORMAT_0" Collapsed="true">
+    <Position X="7" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAgAAEAAGAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_ENCODE_FORMAT_2_SUBHEAD" Collapsed="true">
+    <Position X="14" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAgACAAAAAABAAAAAIAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_ENCODE_FORMAT_2" Collapsed="true">
+    <Position X="12.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>CAAAAAAAAAAAAAgAAUAACAAAAAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_ENCODE_FORMAT_4" Collapsed="true">
+    <Position X="15.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAARBAAAAAAAAAgAAUEACAACEAEAAAEAAAIAAAAAAAA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_ENCODE_FORMAT_6" Collapsed="true">
+    <Position X="17.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAgAAFAAGAAIAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_ENCODE_FORMAT_12_GROUP" Collapsed="true">
+    <Position X="10.5" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAAAAAAAAAAAAAAAASAAAAAAAAAAAA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_ENCODE_FORMAT_12" Collapsed="true">
+    <Position X="8.75" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAgIAEAACAAAAAIAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMAP_TABLE_ENTRY" Collapsed="true">
+    <Position X="5.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAAAACAAAAAAAAACAACAAABCoAgA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCmap" Collapsed="true">
+    <Position X="8.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAACCAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAIA=</HashCode>
+      <FileName>CCmap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CRangeRecord" Collapsed="true">
+    <Position X="15.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAIAAABAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CCoverage" Collapsed="true">
+    <Position X="10.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAEAAgAAAAAAIAQAACAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CLookUpSingleSubstitution1" Collapsed="true">
+    <Position X="15.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQ=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CLookUpSingleSubstitution2" Collapsed="true">
+    <Position X="17.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAACAAAAAAAEAAgAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CLookUpType1" Collapsed="true">
+    <Position X="5.25" Y="4.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAIAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CLookUp" Collapsed="true">
+    <Position X="14" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAQAACAAAAAAAAAAAABACAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CLangSys" Collapsed="true">
+    <Position X="8.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAACAAAAAAAAAAAAAAAgAAAABAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CLangSysRecord" Collapsed="true">
+    <Position X="10.5" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CScript" Collapsed="true">
+    <Position X="17.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CScriptRecord" Collapsed="true">
+    <Position X="5.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CFeatureTable" Collapsed="true">
+    <Position X="14" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CFeatureRecord" Collapsed="true">
+    <Position X="12.25" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CGSUB" Collapsed="true">
+    <Position X="15.75" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAAAAAAAAAAAAAAAAAABgAAAAAIAAAAAAAAAAA=</HashCode>
+      <FileName>CGSUB.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CHead" Collapsed="true">
+    <Position X="17.5" Y="2.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAAAAACEAAABACAQAAgBIgAEAAEAACAAoEAAAQ=</HashCode>
+      <FileName>CHead.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CHhea" Collapsed="true">
+    <Position X="5.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ACAAACAAAAAAJQAIQACAAAAAAAAAAEAAIAAAACIAAAE=</HashCode>
+      <FileName>CHhea.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HMTX_LONGHORMERTRIC" Collapsed="true">
+    <Position X="15.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQIAAAAAAAA=</HashCode>
+      <FileName>CHmtx.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CHmtx" Collapsed="true">
+    <Position X="7" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAA=</HashCode>
+      <FileName>CHmtx.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CLoca" Collapsed="true">
+    <Position X="12.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA=</HashCode>
+      <FileName>CLoca.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CMaxp" Collapsed="true">
+    <Position X="7" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAACEAAIAIAAACAIACAUBAAQAIAAAAAQACAAAAAAA=</HashCode>
+      <FileName>CMaxp.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.LANGTAGRECORD" Collapsed="true">
+    <Position X="12.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAEAAAAAAABAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CName.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.NAMERECORD" Collapsed="true">
+    <Position X="14" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAAAAAAAMAAAAAAAhAAIAAAAgAAAAAAAAA=</HashCode>
+      <FileName>CName.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CName" Collapsed="true">
+    <Position X="8.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAAAAAAAAIAAAARAAAAAAAAAgEAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CName.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HYPANOSE" Collapsed="true">
+    <Position X="10.5" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAQAAAAABAAACACAAUAAAAAAAAIgAAAQ=</HashCode>
+      <FileName>COS2.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.COS2" Collapsed="true">
+    <Position X="12.25" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AIAAIWgAiGAAIAwgUAEkCAQQAAgAAMABAAIEAaCAABA=</HashCode>
+      <FileName>COS2.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CPost" Collapsed="true">
+    <Position X="14" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAABAAAAAAAAAEAABAAgQAAAAiAAAIAAAAQAAAAAAA=</HashCode>
+      <FileName>CPost.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CTableEntry" Collapsed="true">
+    <Position X="8.75" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AACAACAAAAAAAAAAAEAAAAAAAAIAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CTableDirectory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CTableDirectory" Collapsed="true">
+    <Position X="7" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAQACAAgAAAAAAAAAEAAAIAEAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CTableDirectory.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CVhea" Collapsed="true">
+    <Position X="10.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAGAgAAAAAQAIABAABAAAIAAAAEAAIIAAAAIAAAQ=</HashCode>
+      <FileName>CVhea.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.VMTX_LONGHORMETRIC" Collapsed="true">
+    <Position X="15.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAgAAAAAAAAA=</HashCode>
+      <FileName>CVmtx.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CVmtx" Collapsed="true">
+    <Position X="12.25" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>CVmtx.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.GroupRecord" Collapsed="true">
+    <Position X="14" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAEAAAAEAAAAAABAAAAAAAABAAAAAAA=</HashCode>
+      <FileName>GroupRecord.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HYBase" Collapsed="true">
+    <Position X="1.75" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAQBAAAQgGAQR0AEAAAIAAACACCECgBAIUQAIBgABAY=</HashCode>
+      <FileName>HYBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HYFIXED" Collapsed="true">
+    <Position X="7" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAA=</HashCode>
+      <FileName>HYBase.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.CodeComparer" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="10.5" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAA=</HashCode>
+      <FileName>HYCodeMap.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="HYFontCodecCS.HYCodeMapItem" Collapsed="true">
+    <Position X="5.25" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>BAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>HYCodeMap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HYCodeMap" Collapsed="true">
+    <Position X="17.5" Y="6.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAABAAAAAgAAAAAAAQAAA=</HashCode>
+      <FileName>HYCodeMap.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HYDecodeCS" Collapsed="true">
+    <Position X="0.5" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>MACAHwgAAEAUgMEkBkAAAEQAgAJQEUEgCSAgyFBQJgg=</HashCode>
+      <FileName>HYDecode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HYEncode" Collapsed="true">
+    <Position X="2.75" Y="1.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>agFYHA4FAJRMDM4Ih8JyOgQHCAAcxzEQaywKQMhwVBU=</HashCode>
+      <FileName>HYEncode.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="HYFontCodecCS.HYFontCodecCS" Collapsed="true">
+    <Position X="8.75" Y="7.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAA=</HashCode>
+      <FileName>HYFontCodecCS.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="HYFontCodecCS.FONTTYPE" Collapsed="true">
+    <Position X="7" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAAAAQ=</HashCode>
+      <FileName>HYBase.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="HYFontCodecCS.CMAPENCODEFORMAT" Collapsed="true">
+    <Position X="5.25" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIEAAAAAAAAIqgAQAAAAAAAAAAAABAAAAAAAAAA=</HashCode>
+      <FileName>HYBase.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="HYFontCodecCS.TABLETAG" Collapsed="true">
+    <Position X="10.5" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>wCAAAAIAAiSQhAIIAAADEAAAQDQAQACAJAACAoEgAQA=</HashCode>
+      <FileName>HYBase.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="HYFontCodecCS.HYRESULT" Collapsed="true">
+    <Position X="8.75" Y="8.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>ABgQ4oEDwBAnCgCQAUCGGAAGGAIbKQAACBi0AAAAMhA=</HashCode>
+      <FileName>HYResult.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="微软雅黑" Size="9" />
+</ClassDiagram>
