@@ -11,7 +11,7 @@ namespace HYFontCodecCS
     public class HYFontBase : HYBase
     {
         protected FONTTYPE FontType;
-        protected FileStream FRStrm;
+        public FileStream FRStrm;
         protected CTableDirectory TableDirectorty;        
         protected CLoca Loca;        
         protected CMaxp Maxp;

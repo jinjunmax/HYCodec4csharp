@@ -334,7 +334,9 @@ namespace FontView
                 try
                 {
                     strFontFile = FntfleDlg.FileName;
-                    HYRESULT hr = HYFontAPI.TTCToFonts(strFontFile);
+
+                    List<string> lstTTFs = new List<string>();
+                    HYRESULT hr = HYFontAPI.TTCToFonts(strFontFile, ref lstTTFs);
                     if (hr == HYRESULT.NOERROR)
                     {
                         MessageBox.Show("ok");
@@ -350,7 +352,7 @@ namespace FontView
                 }
             }
 
-        }
+        }   // end of private void button8_Click()
 
         // fonts to ttc 
         private void button9_Click(object sender, EventArgs e)

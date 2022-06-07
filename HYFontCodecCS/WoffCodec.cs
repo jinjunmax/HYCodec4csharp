@@ -21,9 +21,9 @@ namespace HYFontCodecCS
     public class WoffCodec : HYBase
     {
         //private byte[] SfntBuf;        
-        private byte[] PrivteBuf;
-        private byte[] OrigMetaBuf;
-        private byte[] CmprsMetaBuf;
+        private byte[] PrivteBuf = null;
+        private byte[] OrigMetaBuf = null;
+        private byte[] CmprsMetaBuf = null;
         private List<byte[]> lstSfntOrigtbBuf;
         private List<byte[]> lstSfntcmprstbBuf;
 

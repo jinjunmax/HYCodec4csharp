@@ -18,33 +18,33 @@ namespace HYFontCodecCS
         };
 
         public class GlyfData
-		{			
-			public List<byte>			lstData = new List<byte>();
-			public uint					DataLen;
-			public List<uint>		    lstUnicode = new List<uint>();
-			public ushort				usAdvWidth;
-			public short				sLsb;
-			public ushort				usAdvHeight;
-			public short				sTsb;
-            public string               name;
-		};      
+        {
+            public List<byte> lstData = new List<byte>();
+            public uint DataLen;
+            public List<uint> lstUnicode = new List<uint>();
+            public ushort usAdvWidth;
+            public short sLsb;
+            public ushort usAdvHeight;
+            public short sTsb;
+            public string name;
+        };
 
-        Dictionary<ushort, ushort> ModifiedVMTX = new Dictionary<ushort, ushort>();        
-        
+        Dictionary<ushort, ushort> ModifiedVMTX = new Dictionary<ushort, ushort>();
+
         /// <summary>
         /// 检测unicode是否在链表中
         /// </summary>
         /// <param name="UInt32 ulUnicod">待检测unicode</param>
         /// <param name="List<UInt32> lstUnicode">unicode链表</param>
         /// <returns></returns>
-		public Boolean CheckUniRepeat(uint ulUnicod, List<uint> lstUnicode)
+        public Boolean CheckUniRepeat(uint ulUnicod, List<uint> lstUnicode)
         {
             foreach (uint ulUni in lstUnicode)
-		    {                
-			    if (ulUni == ulUnicod) return true;
-		    }
+            {
+                if (ulUni == ulUnicod) return true;
+            }
 
-		    return false;
+            return false;
 
         }   // end of public int CheckUniRepeat()
 
@@ -56,14 +56,14 @@ namespace HYFontCodecCS
         /// <param name="List<UInt32> lst">待提取的unicode编码</param>
         /// <param name="int CMAP">CMAP表处理方式 0保持原有CMAP表 1重新编码CMAP表</param>
         /// <returns>HYRESULT</returns> 
-        public HYRESULT ExtractFont(string strTTFFile, string strNewTTFFile, List<UInt32> lstunicode, int CMAP,ref List<UInt32> lstMssUni)
+        public HYRESULT ExtractFont(string strTTFFile, string strNewTTFFile, List<UInt32> lstunicode, int CMAP, ref List<UInt32> lstMssUni)
         {
             HYRESULT sult;
-            HYDecodeC FontDecode = new HYDecodeC();            
+            HYDecodeC FontDecode = new HYDecodeC();
             try {
                 FontDecode.FontOpen(strTTFFile);
             }
-            catch (Exception ext){
+            catch (Exception ext) {
                 ext.ToString();
                 throw;
             }
@@ -138,10 +138,10 @@ namespace HYFontCodecCS
             FontEncode.tbPost.version.fract = 0;
 
             // 为了压缩webfont的传输数据量，只保留字库格式强制要求必须保留的八个表
-            int TableIndex = -1;            
+            int TableIndex = -1;
             TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VHEA_TAG);
             if (TableIndex != -1)
-            {                
+            {
                 FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
                 FontDecode.tbDirectory.numTables--;
             }
@@ -150,14 +150,14 @@ namespace HYFontCodecCS
             {
                 FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
                 FontDecode.tbDirectory.numTables--;
-            } 
+            }
             // 抽取子字库后会出现字符缺失或字序打乱，导致GSUB映射错误，所以这个需要删除
             TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GSUB_TAG);
             if (TableIndex != -1)
             {
                 FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
                 FontDecode.tbDirectory.numTables--;
-            }            
+            }
             TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GPOS_TAG);
             if (TableIndex != -1)
             {
@@ -167,7 +167,7 @@ namespace HYFontCodecCS
             //这个在抽取字库时，如果不删掉会无法在webfont上显示（可能）
             TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VDMX_TAG);
             if (TableIndex != -1)
-            {                
+            {
                 FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
                 FontDecode.tbDirectory.numTables--;
             }
@@ -185,7 +185,7 @@ namespace HYFontCodecCS
                 FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
                 FontDecode.tbDirectory.numTables--;
             }
-            
+
             List<byte> lstGlyphData = new List<byte>();
             List<uint> vtTableFlag = new List<uint>();
 
@@ -200,7 +200,7 @@ namespace HYFontCodecCS
                     vtTableFlag.Add((uint)TABLETAG.GLYF_TAG);
                     vtTableFlag.Add((uint)TABLETAG.HEAD_TAG);
                     vtTableFlag.Add((uint)TABLETAG.MAXP_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.POST_TAG);                    
+                    vtTableFlag.Add((uint)TABLETAG.POST_TAG);
 
                     BulidFont(strNewTTFFile, FontDecode, FontEncode, lstGlyphData, vtTableFlag, lstunicode);
                 }
@@ -247,7 +247,7 @@ namespace HYFontCodecCS
                 {
                     ex.ToString();
                     FontDecode.FontClose();
-                    throw;                
+                    throw;
                 }
             }
 
@@ -255,6 +255,1143 @@ namespace HYFontCodecCS
             return HYRESULT.NOERROR;
 
         }   // end of HYRESULT ExtractFont()
+
+        public HYRESULT GetSubset(string strTTFFile, string strNewTTFFile, List<UInt32> lstunicode, int CMAP, ref List<UInt32> lstMssUni)
+        {   
+            HYDecodeC FontDecode = new HYDecodeC();
+            HYRESULT sult = PrepareExtractFont(strTTFFile, ref FontDecode);
+            if (sult != HYRESULT.NOERROR) return sult;
+
+            FontDecode.codemap = new HYCodeMap();
+            byte[] pOutGlyphs = FilterGlyphs(ref FontDecode, ref lstunicode);
+
+            MakeFont(ref FontDecode, pOutGlyphs, strNewTTFFile);
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT GetSubset()
+
+        public void MakeFont(ref HYDecodeC FontDecode, byte[] pGlpyData, string strNewTTFFile)
+        {   
+            try {
+                if (File.Exists(strNewTTFFile)){
+                    File.Delete(strNewTTFFile);
+                }
+            }
+            catch (Exception ext) {
+                ext.ToString();
+                throw;
+            }
+
+            HYEncode FontEncode = new HYEncode();
+            FontEncode.FontOpen(strNewTTFFile);
+
+            FontEncode.FntType = FontDecode.FntType;
+            FontEncode.tbDirectory = FontDecode.tbDirectory;
+            FontEncode.codemap = FontDecode.codemap;
+            FontEncode.EncodeTableDirectory();
+
+            //WriteTableEntry(ref FontEncode.FRStrm, FontDecode.tbDirectory);
+            for (int i = 0; i != FontEncode.tbDirectory.vtTableEntry.Count; i++)
+            {
+                CTableEntry HYEntry = FontEncode.tbDirectory.vtTableEntry[i];
+                if (HYEntry.tag == (uint)TABLETAG.LOCA_TAG){
+                    BulidLOCAL(ref FontEncode.FRStrm, ref HYEntry, FontDecode);
+                }
+                else if (HYEntry.tag == (uint)TABLETAG.GLYF_TAG){
+                    BulidGlyph(ref FontEncode.FRStrm, ref HYEntry, pGlpyData);                    
+                }
+                else if (HYEntry.tag == (uint)TABLETAG.HEAD_TAG)
+                {
+                   BulidHead(ref FontEncode.FRStrm, ref HYEntry, FontDecode);
+                }
+                else if (HYEntry.tag == (uint)TABLETAG.CMAP_TAG)
+                {                    
+                    MakeCMAP(ref FontEncode);                    
+                    Encodecmap(ref FontEncode, ref HYEntry, FontEncode.codemap.lstCodeMap);
+                }
+                else
+                {
+                    uint iLength = (HYEntry.length + 3) / 4 * 4;
+                    byte[] TabelData = new byte[iLength];
+                    FontDecode.DecodeStream.Seek(HYEntry.offset, SeekOrigin.Begin);
+                    FontDecode.DecodeStream.Read(TabelData, 0, (int)iLength);
+
+                    int iEncodeEntryIndex = FontEncode.tbDirectory.FindTableEntry((UInt32)HYEntry.tag);
+                    CTableEntry tbEncodeEntry = FontEncode.tbDirectory.vtTableEntry[iEncodeEntryIndex];
+
+                    tbEncodeEntry.offset = (uint)FontEncode.EncodeStream.Position;
+                    tbEncodeEntry.length = HYEntry.length;
+                    FontEncode.EncodeStream.Write(TabelData, 0, TabelData.Length);
+                }
+		    }
+
+            FontEncode.EncodeStream.Flush();
+            for (int i = 0; i < FontEncode.tbDirectory.numTables; i++)
+            {
+                CTableEntry HYEntry = FontEncode.tbDirectory.vtTableEntry[i];
+                uint CheckBufSz = (HYEntry.length + 3) / 4 * 4;
+                byte[] pCheckBuf = new byte[CheckBufSz];
+                FontEncode.FRStrm.Seek(HYEntry.offset, SeekOrigin.Begin);
+                FontEncode.FRStrm.Read(pCheckBuf, 0, (int)CheckBufSz);
+
+                HYEntry.checkSum = CalcFontTableChecksum(pCheckBuf);
+            }
+            FontEncode.EncodeTableDirectory();
+            FontEncode.FRStrm.Flush();
+            FontEncode.FRStrm.Close();
+
+            FontEncode.SetCheckSumAdjustment(strNewTTFFile);
+
+        }   // end of int MakeFont()
+
+        UInt32 CalcFontTableChecksum(byte[] btFile)
+        {
+            UInt32 Sum = 0;
+            Int32 Index = 0;
+            Int32 length = ((btFile.Length + 3) & ~3) / sizeof(Int32);
+
+            for (int i = 0; i < length; i++)
+            {
+                byte[] btCnv = new byte[4] { 0, 0, 0, 0 };
+                btCnv[0] = btFile[Index++];
+                if (Index == btFile.Length)
+                {
+                    btCnv = btCnv.Reverse().ToArray();
+                    Sum += BitConverter.ToUInt32(btCnv, 0);
+                    break;
+                }
+                btCnv[1] = btFile[Index++];
+                if (Index == btFile.Length)
+                {
+                    btCnv = btCnv.Reverse().ToArray();
+                    Sum += BitConverter.ToUInt32(btCnv, 0);
+                    break;
+                }
+                btCnv[2] = btFile[Index++];
+                if (Index == btFile.Length)
+                {
+                    btCnv = btCnv.Reverse().ToArray();
+                    Sum += BitConverter.ToUInt32(btCnv, 0);
+                    break;
+                }
+
+                btCnv[3] = btFile[Index++];
+                btCnv = btCnv.Reverse().ToArray();
+                Sum += BitConverter.ToUInt32(btCnv, 0);
+            }
+
+            return Sum;
+
+        }	// end of unsigned long CalcFontTableChecksum()
+
+        void BulidLOCAL(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode)
+        {
+            HYEntry.offset = (uint)FWStrm.Position;
+
+            UInt16 usTmp;
+            UInt32 ulTmp;
+            byte[] btTmp;
+            if (FontDecode.tbHead.indexToLocFormat == 0){
+                foreach (uint iloca in FontDecode.tbLoca.vtLoca){
+                    usTmp = hy_cdr_int16_to((UInt16)iloca);
+                    btTmp = BitConverter.GetBytes(usTmp);
+                    FWStrm.Write(btTmp, 0, btTmp.Length);
+                }
+            }
+            else if (FontDecode.tbHead.indexToLocFormat == 1){
+                foreach (uint iloca in FontDecode.tbLoca.vtLoca){
+                    ulTmp = hy_cdr_int32_to(iloca);
+                    btTmp = BitConverter.GetBytes(ulTmp);
+                    FWStrm.Write(btTmp, 0, btTmp.Length);
+                }
+            }
+
+            HYEntry.length = (uint)FWStrm.Position - HYEntry.offset;
+            uint iTail = 4 - HYEntry.length % 4;
+            if (HYEntry.length % 4 > 0){
+                byte c = 0;
+                for (int i = 0; i < iTail; i++) {
+                    FWStrm.WriteByte(c);
+                }
+            }
+
+        }	// end of void BulidLOCAL()
+
+        void BulidGlyph(ref FileStream FWStrm, ref CTableEntry HYEntry, byte[] pGlpyData)
+        {            
+            //pGlpyData.Length 已经是4字节对齐了;
+            // 偏移
+            HYEntry.offset = (uint)FWStrm.Position;
+            FWStrm.Write(pGlpyData, 0, pGlpyData.Length);
+            HYEntry.length = (uint)pGlpyData.Length;
+            HYEntry.checkSum = CalcFontTableChecksum(pGlpyData);
+
+        }	// end of void BulidGlyph()
+
+        void BulidHead(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode)
+        {            
+            HYEntry.offset = (uint)FWStrm.Position;
+
+            UInt16 usTmp;
+            UInt32 ulTmp;
+            byte[] btTmp;
+            
+            //Table version number
+            FontDecode.tbHead.version.value = 1;
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.version.value);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            FontDecode.tbHead.version.fract = 0;
+            usTmp = hy_cdr_int16_to(FontDecode.tbHead.version.fract);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //fontRevision			
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.fontRevision.value);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            usTmp = hy_cdr_int16_to(FontDecode.tbHead.fontRevision.fract);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            // checkSumAdjustment		
+            ulTmp = hy_cdr_int32_to(FontDecode.tbHead.checkSumAdjustment);
+            btTmp = BitConverter.GetBytes(ulTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //magicNumber
+            FontDecode.tbHead.magicNumber = 0x5F0F3CF5;
+            ulTmp = hy_cdr_int32_to(FontDecode.tbHead.magicNumber);
+            btTmp = BitConverter.GetBytes(ulTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //flags
+            usTmp = hy_cdr_int16_to(FontDecode.tbHead.flags);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //unitsPerEm
+            usTmp = hy_cdr_int16_to(FontDecode.tbHead.unitsPerEm);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //create            
+            FWStrm.Write(FontDecode.tbHead.created, 0, 8);
+            //modified
+            FWStrm.Write(FontDecode.tbHead.modified, 0, 8);
+            //xMin
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.xMin);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //yMin
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.yMin);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //xMax
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.xMax);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //yMax
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.yMax);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //macStyle
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.macStyle);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //lowestRecPPEM
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.lowestRecPPEM);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //fontDirectionHint
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.fontDirectionHint);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //indexToLocFormat
+            FontDecode.tbHead.indexToLocFormat = 1;
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.indexToLocFormat);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //glyphDataFormat
+            FontDecode.tbHead.glyphDataFormat = 0;
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHead.glyphDataFormat);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            HYEntry.length = (uint)FWStrm.Position - HYEntry.offset;
+            uint iTail = 4 - HYEntry.length % 4;
+            if (HYEntry.length % 4 > 0) {
+                byte c = 0;
+                for (int i = 0; i < iTail; i++)  {
+                    FWStrm.WriteByte(c);
+                }
+            }
+
+        }	// end of void CFontExtract::BulidHead()
+
+        void FilterByUnicode(ulong ulUnicode, ref List<HYCodeMapItem> lstCodeMap)
+        {
+            List<HYCodeMapItem> vtTmpHYCodeMap = new List<HYCodeMapItem>();
+            vtTmpHYCodeMap.AddRange(lstCodeMap);
+                
+            lstCodeMap.Clear();
+            
+            for (int i = 0; i < vtTmpHYCodeMap.Count; i++) {
+                if (vtTmpHYCodeMap[i].Unicode != ulUnicode){
+                    lstCodeMap.Add(vtTmpHYCodeMap[i]);
+                }
+            }
+
+        }	// end of void CHYCodeMap::FilterByUnicode()
+
+        private  int  HYCodeMapSortPredicate(HYCodeMapItem d1, HYCodeMapItem d2)
+        {
+            int ireturn = 0;
+            if (d1.Unicode < d2.Unicode) ireturn=-1;
+            if (d1.Unicode == d2.Unicode) ireturn=0;
+            if (d1.Unicode > d2.Unicode) ireturn =1;
+
+            return ireturn;
+
+        }	// end of BOOL HYCodeMapSortPredicate()
+
+        void MakeCMAP(ref HYEncode FontEncode)
+        {            
+            CCmap cmap = new CCmap();
+
+            CMAP_TABLE_ENTRY entry = new CMAP_TABLE_ENTRY();
+            entry.plat_ID = 3;
+            entry.plat_encod_ID = 1;
+            entry.format = (ushort)CMAPENCODEFORMAT.CMAP_ENCODE_FT_4;
+            cmap.vtCamp_tb_entry.Add(entry);
+
+            FilterByUnicode(0xffffffff, ref FontEncode.codemap.lstCodeMap);
+            FontEncode.codemap.lstCodeMap.Sort(HYCodeMapSortPredicate);
+            
+            if (FontEncode.codemap.lstCodeMap[FontEncode.codemap.lstCodeMap.Count - 1].Unicode > 0xFFFF)
+            {
+                entry = new CMAP_TABLE_ENTRY();
+                entry.plat_ID = 3;
+                entry.plat_encod_ID = 10;
+                entry.format = (ushort)CMAPENCODEFORMAT.CMAP_ENCODE_FT_12;
+                cmap.vtCamp_tb_entry.Add(entry);
+            }
+            /*
+            int iIndx = FontCodec.m_HYCmap.FindSpecificEntryIndex(CMAP_ENCODE_FT_14);
+            if (iIndx != -1)
+            {
+                CMAP_TABLE_ENTRY Entry = FontCodec.m_HYCmap.vtCamp_tb_entry[iIndx];
+                cmap.vtCamp_tb_entry.push_back(Entry);
+            }
+            */
+            cmap.numSubTable = (ushort)cmap.vtCamp_tb_entry.Count;
+            FontEncode.tbCmap = cmap;
+
+        }   // end of void CFontExtract::MakeCMAP()
+
+        public HYRESULT Encodecmap(ref HYEncode encode, ref CTableEntry HYEntry,List<HYCodeMapItem> lstCodeMap)
+        {
+            FileStream FWStrm = encode.FRStrm;
+            CCmap Cmap = encode.tbCmap;
+            HYEntry.offset = (uint)FWStrm.Position;
+
+            UInt16 usTmp;
+            UInt32 ulTmp;
+            byte[] btTmp;
+
+            //version
+            usTmp = hy_cdr_int16_to(Cmap.version);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //numSubTable
+            usTmp = hy_cdr_int16_to(Cmap.numSubTable);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            int i = 0;
+            for (i = 0; i < Cmap.numSubTable; i++)
+            {
+                CMAP_TABLE_ENTRY tbCmapEntry = Cmap.vtCamp_tb_entry[i];
+
+                // platformID
+                usTmp = hy_cdr_int16_to(tbCmapEntry.plat_ID);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                // encodingID
+                usTmp = hy_cdr_int16_to(tbCmapEntry.plat_encod_ID);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                // offset				
+                tbCmapEntry.offset = HYEntry.offset;
+                ulTmp = hy_cdr_int32_to(HYEntry.offset);
+                btTmp = BitConverter.GetBytes(ulTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+            }
+
+            for (i = 0; i < Cmap.numSubTable; i++)
+            {
+                CMAP_TABLE_ENTRY tbCmapEntry = Cmap.vtCamp_tb_entry[i];
+                switch (tbCmapEntry.format)
+                {
+                     case 4:
+                        {   
+                           EncodeCmapFmt4(ref FWStrm,ref tbCmapEntry, lstCodeMap);
+                        }
+                        break;
+                    case 12:
+                        {                            
+                            EncodeCmapFmt12(ref FWStrm,ref tbCmapEntry,lstCodeMap);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            long ulCmapEndPos = FWStrm.Position;
+            FWStrm.Seek(HYEntry.offset + 4, SeekOrigin.Begin);
+
+            for (i = 0; i < Cmap.numSubTable; i++)
+            {
+                CMAP_TABLE_ENTRY tbCampEntry = Cmap.vtCamp_tb_entry[i];
+
+                // platformID
+                usTmp = hy_cdr_int16_to(tbCampEntry.plat_ID);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                // encodingID
+                usTmp = hy_cdr_int16_to(tbCampEntry.plat_encod_ID);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                // offset
+                ulTmp = hy_cdr_int32_to(tbCampEntry.offset);
+                btTmp = BitConverter.GetBytes(ulTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+            }
+
+            FWStrm.Flush();
+            FWStrm.Seek(ulCmapEndPos, SeekOrigin.Begin);
+            HYEntry.length = (uint)FWStrm.Position - HYEntry.offset;
+            uint iTail = 4 - HYEntry.length % 4;
+            if (HYEntry.length % 4 > 0)
+            {
+                byte c = 0;
+                for (int j = 0; j < iTail; j++)
+                {
+                    FWStrm.WriteByte(c);
+                }
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of protected HYRESULT Encodecmap()
+
+        public int NextGroup(int ix, int eov, ref GroupRecord group, List<HYCodeMapItem> lstCodeMap)
+        {
+            int entryCount = 0;
+            bool haveContiguous = false;		// Neither contiguous nor discontiguous yet
+            bool contiguous = true;			// Default to true for single glyph range.
+
+            if (ix != eov)
+            {
+                UInt32 startCharCode = lstCodeMap[ix].Unicode;
+                int startGID = lstCodeMap[ix].GID;
+                int hold = ix;
+                ++ix;
+                ++entryCount;
+
+                group.startCode = startCharCode;
+                group.startGID = startGID;
+                group.endCode = startCharCode;
+
+                while (ix != eov && lstCodeMap[ix].Unicode == startCharCode + 1)
+                {
+                    int gid = lstCodeMap[ix].GID;
+                    bool successive = gid == startGID + 1;
+
+                    startCharCode = lstCodeMap[ix].Unicode;
+                    ++group.endCode;
+
+                    if (haveContiguous)
+                    {
+                        if (successive != contiguous)
+                        {
+                            ix = hold;
+                            entryCount -= 1;
+                            group.endCode -= 1;
+                            break;
+                        }
+                    }
+                    else
+                        contiguous = successive;
+
+                    haveContiguous = true;
+                    startGID = gid;
+
+                    hold = ++ix;
+                    ++entryCount;
+                }
+            }
+            group.contiguous = contiguous;
+            return ix;
+
+        }   // end of protected HYRESULT	NextGroup()
+        public int FindGryphIndexByUnciodeEx(UInt32 ulUnicode, List<HYCodeMapItem> lstCodeMap)
+        {
+            foreach (HYCodeMapItem item in lstCodeMap)
+            {
+                if (item.Unicode == ulUnicode)
+                {
+                    return (UInt16)item.GID;
+                }
+            }
+
+            return -1;
+
+        }	// end of int	FindGryphIndexByUnciodeEx()
+        public int EncodeCmapFmt4(ref FileStream FWStrm, ref CMAP_TABLE_ENTRY entry, List<HYCodeMapItem> lstCodeMap)
+        {
+            List<byte> vtCmap = new List<byte>();
+            UInt16 usTmp;
+            byte[] btTmp;
+
+            CMAP_ENCODE_FORMAT_4 CEF4 = entry.Format4;
+            CEF4.format = 0;
+
+            List<GroupRecord> groupList = new List<GroupRecord>();
+            int eov = lstCodeMap.Count;
+            int ix = 0;
+
+            while (ix != eov && lstCodeMap[ix].Unicode <= 0xffff)
+            {
+                GroupRecord group = new GroupRecord();
+                int nextIx = NextGroup(ix, eov, ref group, lstCodeMap);
+                if (group.startCode < 0xffff)
+                {	// This format does not code above 0xfffe
+                    if (group.endCode > 0xfffe)
+                        group.endCode = 0xfffe;
+
+                    groupList.Add(group);
+                }
+                ix = nextIx;
+            }
+
+            UInt32 lastCode = 0;
+            UInt16 entryCount = 0;
+            UInt16 groupCount = 0;
+
+            GroupRecord gix = groupList[0];
+            GroupRecord gend = groupList[groupList.Count - 1];
+
+            int iPoint = 0;
+            //if (gix != groupList[groupList.Count - 1])
+            //   ++iPoint;
+
+            while (true)
+            {
+                if (!gix.contiguous)
+                    entryCount += (UInt16)(gix.endCode - gix.startCode + 1);
+
+                if (gix == gend)
+                {
+                    lastCode = gend.endCode;
+                    groupCount += 1;
+                    break;
+                }
+
+                lastCode = gix.endCode;
+                groupCount += 1;
+                gix = groupList[++iPoint];
+            }
+
+            if (lastCode != 0xffff)
+                groupCount += 1;
+
+            int length = 2 * (8 + groupCount * 4 + entryCount);
+            if (length > 65535)
+                return -1;
+
+            UInt16[] startTable = new UInt16[groupCount];
+            UInt16[] endTable = new UInt16[groupCount];
+            Int16[] idDelta = new Int16[groupCount];
+            UInt16[] idRangeOffset = new UInt16[groupCount];
+            List<UInt16> glyphIdArray = new List<UInt16>();
+
+            int groupIx = 0;
+            entryCount = 0;
+            iPoint = 0;
+            // gix = groupList[iPoint];
+            while (iPoint < groupList.Count)
+            {
+                gix = groupList[iPoint];
+                uint entries = gix.endCode - gix.startCode + 1;
+
+                startTable[groupIx] = (UInt16)gix.startCode;
+                endTable[groupIx] = (UInt16)gix.endCode;
+
+                if (gix.contiguous)
+                {	// If the glyphIDs in the range are consecutive then we don't need entries in the GlyphIdArray.
+                    idDelta[groupIx] = (short)(gix.startGID - gix.startCode);
+                    idRangeOffset[groupIx] = 0xffff;
+                }
+                else
+                {	//Theoretically the table can be compressed by finding multiple ranges with the same differences between each
+                    // code point in the range and the corresponding glyphID, and then adjusting the bias via idDelta. We're not going to
+                    // bother. It's computationally expensive and probably doesn't yield much savings for most circumstances.
+                    idDelta[groupIx] = 0;
+                    idRangeOffset[groupIx] = (UInt16)entryCount;
+
+                    uint code = gix.startCode;
+                    for (uint i = 0; i < entries; ++i)
+                    {
+                        int iGID = FindGryphIndexByUnciodeEx(code++, lstCodeMap);
+                        if (iGID != -1)
+                            glyphIdArray.Add((UInt16)iGID);
+                        else
+                            glyphIdArray.Add(0);
+                    }
+
+                    if (entryCount + entries > 0xffff)
+                        return -1;
+
+                    entryCount += (UInt16)entries;
+                }
+                ++groupIx;
+                //gix = groupList[++iPoint];
+                iPoint++;
+            }
+
+            if (lastCode != 0xffff)
+            {
+                startTable[groupIx] = 0xffff;
+                endTable[groupIx] = 0xffff;
+                idDelta[groupIx] = 1;
+                idRangeOffset[groupIx] = 0xffff;
+            }
+
+            //format
+            entry.Format4.format = 4;
+            usTmp = hy_cdr_int16_to(entry.Format4.format);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+            //length
+            entry.Format4.length = (ushort)length;
+            usTmp = hy_cdr_int16_to(entry.Format4.length);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+
+            //language
+            entry.Format4.language = 0;
+            usTmp = hy_cdr_int16_to(entry.Format4.language);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+
+            //segCountX2
+            entry.Format4.segCountX2 = (ushort)(groupCount * 2);
+            usTmp = hy_cdr_int16_to(entry.Format4.segCountX2);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+
+            //searchRange
+            entry.Format4.searchRange = (ushort)(2 * Math.Pow(2, Math.Floor((Math.Log((double)groupCount) / Math.Log(2.0)))));
+            usTmp = hy_cdr_int16_to(entry.Format4.searchRange);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+
+            //entrySelector
+            entry.Format4.entrySelector = (ushort)(Math.Log(entry.Format4.searchRange / 2.0) / Math.Log(2.0));
+            usTmp = hy_cdr_int16_to(entry.Format4.entrySelector);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+
+            //rangeShift
+            entry.Format4.rangeShift = (ushort)(entry.Format4.segCountX2 - entry.Format4.searchRange);
+            usTmp = hy_cdr_int16_to(entry.Format4.rangeShift);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+
+            //endCount			
+            for (int i = 0; i < groupCount; i++)
+            {
+                usTmp = endTable[i];
+                usTmp = hy_cdr_int16_to(usTmp);
+                btTmp = BitConverter.GetBytes(usTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+            }
+
+            //reservedPad
+            entry.Format4.reservedPad = 0;
+            usTmp = hy_cdr_int16_to(entry.Format4.reservedPad);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int i = 0; i < btTmp.Length; i++) vtCmap.Add(btTmp[i]);
+
+            //startCount
+            for (int i = 0; i < groupCount; i++)
+            {
+                usTmp = startTable[i];
+                usTmp = hy_cdr_int16_to(usTmp);
+                btTmp = BitConverter.GetBytes(usTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+            }
+
+            //idDelta
+            for (int i = 0; i < groupCount; i++)
+            {
+                usTmp = (ushort)idDelta[i];
+                usTmp = hy_cdr_int16_to(usTmp);
+                btTmp = BitConverter.GetBytes(usTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+            }
+
+            //idRangeOffset
+            for (int i = 0; i < groupCount; i++)
+            {
+                if (idRangeOffset[i] == 0xffff)
+                {
+                    usTmp = 0;
+                }
+                else
+                {
+                    usTmp = (ushort)(2 * (idRangeOffset[i] + groupCount - i));
+                }
+
+                usTmp = hy_cdr_int16_to(usTmp);
+                btTmp = BitConverter.GetBytes(usTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+            }
+
+            //glyphIdArray
+            for (int i = 0; i < glyphIdArray.Count; i++)
+            {
+                usTmp = glyphIdArray[i];
+                usTmp = hy_cdr_int16_to(usTmp);
+                btTmp = BitConverter.GetBytes(usTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+            }
+
+            entry.offset = (uint)(FWStrm.Position - entry.offset);
+            FWStrm.Write(vtCmap.ToArray(), 0, vtCmap.Count);
+
+            return 0;
+
+        }   // end of protected HYRESULT	EncodeCmapFmt4()
+
+        public void EncodeCmapFmt12(ref FileStream FWStrm, ref CMAP_TABLE_ENTRY entry, List<HYCodeMapItem> lstCodeMap)
+        {
+            List<byte> vtCmap = new List<byte>();
+
+            UInt16 usTmp;
+            uint ulTmp;
+            byte[] btTmp;
+
+            int iGlyphIndex = -1, iExpectGlyphIndex = -1;
+            ulong ulUnicode = 0, ulExpectUnicode = 0;
+            int i = 0, j = 0;
+
+            int iCharNumber = lstCodeMap.Count;
+            while (i < iCharNumber)
+            {
+                CMAP_ENCODE_FORMAT_12_GROUP tagF12Group = new CMAP_ENCODE_FORMAT_12_GROUP();
+                HYCodeMapItem HYMapItem = lstCodeMap[i];
+
+                iGlyphIndex = HYMapItem.GID;
+                ulUnicode = HYMapItem.Unicode;
+
+                if (iGlyphIndex == 0)
+                {
+                    i++;
+                    continue;
+                }
+
+                tagF12Group.startCharCode = (uint)ulUnicode;
+                tagF12Group.startGlyphID = (uint)iGlyphIndex;
+
+                for (j = i + 1; j < iCharNumber; j++)
+                {
+                    HYCodeMapItem HYMapItem1 = lstCodeMap[j];
+                    iExpectGlyphIndex = HYMapItem1.GID;
+                    ulExpectUnicode = HYMapItem1.Unicode;
+
+                    if (iExpectGlyphIndex == 0) continue;
+
+                    iGlyphIndex++;
+                    ulUnicode++;
+
+                    // Index和unicode都必须是连续的,否则段结束
+                    if (iExpectGlyphIndex != iGlyphIndex || ulExpectUnicode != ulUnicode)
+                    {
+                        tagF12Group.endCharCode = (uint)(ulUnicode - 1);
+                        entry.Format12.vtGroup.Add(tagF12Group);
+                        i = j;
+                        break;
+                    }
+                }
+
+                // 数组末尾
+                if (j == iCharNumber)
+                {
+                    if (tagF12Group.endCharCode == 0)
+                    {
+                        if (lstCodeMap[j - 1].GID == 0)
+                            tagF12Group.endCharCode = lstCodeMap[j - 2].Unicode;
+                        else
+                            tagF12Group.endCharCode = lstCodeMap[j - 1].Unicode;
+
+                        entry.Format12.vtGroup.Add(tagF12Group);
+                    }
+                    break;
+                }
+            }
+
+            // 向CMAP_ENCODE_F12赋值	
+            entry.Format12.format = 12;
+            usTmp = hy_cdr_int16_to(entry.Format12.format);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+
+            entry.Format12.reserved = 0;
+            usTmp = hy_cdr_int16_to(entry.Format12.reserved);
+            btTmp = BitConverter.GetBytes(usTmp);
+            for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+
+
+            // 16 == format + reserved + length + language + nGroups
+            // 12 == startCharCode + endCharCode + startGlyphID
+            entry.Format12.length = (uint)(16 + entry.Format12.vtGroup.Count * 12);
+            ulTmp = hy_cdr_int32_to(entry.Format12.length);
+            btTmp = BitConverter.GetBytes(ulTmp);
+            for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+
+            entry.Format12.language = 0;
+            ulTmp = hy_cdr_int32_to(entry.Format12.language);
+            btTmp = BitConverter.GetBytes(ulTmp);
+            for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+
+            entry.Format12.nGroups = (uint)entry.Format12.vtGroup.Count;
+            ulTmp = hy_cdr_int32_to(entry.Format12.nGroups);
+            btTmp = BitConverter.GetBytes(ulTmp);
+            for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+
+            ulTmp = 0;
+            for (int x = 0; x < entry.Format12.vtGroup.Count; x++)
+            {
+                List<CMAP_ENCODE_FORMAT_12_GROUP> vtGroups = entry.Format12.vtGroup;
+                ulTmp = hy_cdr_int32_to(vtGroups[x].startCharCode);
+                btTmp = BitConverter.GetBytes(ulTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+
+                ulTmp = hy_cdr_int32_to(vtGroups[x].endCharCode);
+                btTmp = BitConverter.GetBytes(ulTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+
+                ulTmp = hy_cdr_int32_to(vtGroups[x].startGlyphID);
+                btTmp = BitConverter.GetBytes(ulTmp);
+                for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
+            }
+
+            entry.offset = (uint)(FRStrm.Position - entry.offset);
+            for (int y = 0; y < vtCmap.Count; y++)
+            {
+                FRStrm.WriteByte(vtCmap[y]);
+            }
+
+        }   // end of protected HYRESULT	EncodeCmapFmt12()
+
+
+        public void WriteTableEntry(ref FileStream WrtStrm,  CTableDirectory TbDirectory)
+        {
+            ushort searchRange = 0;
+            searchRange = (ushort)(Math.Log((double)TbDirectory.numTables) / Math.Log(2.0));
+            searchRange = (ushort)(Math.Pow(2.0, searchRange));
+            searchRange = (ushort)(searchRange * 16);
+
+            TbDirectory.searchRange = searchRange;
+            TbDirectory.entrySelector = (ushort)(Math.Log((float)(TbDirectory.searchRange / 16)) / Math.Log(2.0));
+            TbDirectory.rangeShift = (ushort)(TbDirectory.numTables * 16 - TbDirectory.searchRange);
+
+            WrtStrm.Seek(0,SeekOrigin.Begin);            
+
+            ushort usTmp;
+            ulong ulTmp;
+            // sfnt version
+            usTmp = hy_cdr_int16_to((ushort)TbDirectory.version.value);
+            byte[] btTmp = BitConverter.GetBytes(usTmp);
+            WrtStrm.Write(btTmp, 0, btTmp.Length);
+            usTmp = hy_cdr_int16_to((ushort)TbDirectory.version.fract);
+            btTmp = BitConverter.GetBytes(usTmp);
+            WrtStrm.Write(btTmp, 0, btTmp.Length);
+            //numTables
+            usTmp = hy_cdr_int16_to(TbDirectory.numTables);
+            btTmp = BitConverter.GetBytes(usTmp);
+            WrtStrm.Write(btTmp, 0, btTmp.Length);
+            // searchRange
+            usTmp = hy_cdr_int16_to(TbDirectory.searchRange);            
+            btTmp = BitConverter.GetBytes(usTmp);
+            WrtStrm.Write(btTmp, 0, btTmp.Length);
+
+            // entrySelector
+            usTmp = hy_cdr_int16_to(TbDirectory.entrySelector);
+            btTmp = BitConverter.GetBytes(usTmp);
+            WrtStrm.Write(btTmp, 0, btTmp.Length);
+            //rangeShift
+            usTmp = hy_cdr_int16_to(TbDirectory.rangeShift);
+            btTmp = BitConverter.GetBytes(usTmp);
+            WrtStrm.Write(btTmp, 0, btTmp.Length);
+
+            for (int i = 0; i < TbDirectory.numTables; i++) {
+                CTableEntry HYEntry = TbDirectory.vtTableEntry[i];
+
+                //tag		
+                ulTmp = hy_cdr_int32_to(HYEntry.tag);
+                btTmp = BitConverter.GetBytes(usTmp);
+                WrtStrm.Write(btTmp, 0, btTmp.Length);
+                // checkSum
+                ulTmp = hy_cdr_int32_to(HYEntry.checkSum);
+                btTmp = BitConverter.GetBytes(usTmp);
+                WrtStrm.Write(btTmp, 0, btTmp.Length);
+                //offset
+                ulTmp = hy_cdr_int32_to(HYEntry.offset);
+                btTmp = BitConverter.GetBytes(usTmp);
+                WrtStrm.Write(btTmp, 0, btTmp.Length);
+                //length
+                ulTmp = hy_cdr_int32_to(HYEntry.length);
+                btTmp = BitConverter.GetBytes(usTmp);
+                WrtStrm.Write(btTmp, 0, btTmp.Length);
+            }
+
+        }	// end of void CFontExtract::WriteTableEntry()
+
+        public HYRESULT PrepareExtractFont(string strTTFFile, ref HYDecodeC FontDecode)
+        {
+            try{
+                FontDecode.FontOpen(strTTFFile);
+            }
+            catch (Exception ext){
+                ext.ToString();
+                return HYRESULT.FILE_OPEN;
+            }
+
+            FontDecode.DecodeTableDirectory();
+            if (FontDecode.tbDirectory.version.value != 1 && FontDecode.tbDirectory.version.fract != 0)
+                return HYRESULT.NO_TTF; // 不是truetype
+
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GLYF_TAG) == -1) return HYRESULT.GLYF_DECODE;
+
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.CMAP_TAG) == -1) return HYRESULT.CMAP_DECODE;
+            FontDecode.DecodeCmap();
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.MAXP_TAG) == -1) return HYRESULT.MAXP_DECODE;
+            FontDecode.DecodeMaxp();
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.HEAD_TAG) == -1) return HYRESULT.HEAD_DECODE;
+            FontDecode.DecodeHead();
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.LOCA_TAG) == -1) return HYRESULT.LOCA_DECODE;
+            FontDecode.DecodeLoca();
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.COLR_TAG) != -1) {
+                FontDecode.DecodeCOLR();
+            }            
+
+            // 抽取子字库后会出现字符缺失或字序打乱，导致GSUB映射错误，所以这个需要删除
+            int TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GSUB_TAG);
+            if (TbIndex!= -1) {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);                
+                FontDecode.tbDirectory.numTables--;
+            }
+            //这个在抽取子库时，如果不删掉会无法在webfont上显示（可能）
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VDMX_TAG);
+            if (TbIndex != -1){
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+             }
+            //这个在抽取子库时，如果不删掉会无法在webfont上显示（必现）
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.HDMX_TAG);
+            if (TbIndex != -1) {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            //非必需表
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.LTSH_TAG);
+            if (TbIndex != -1)    {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            // subset多为web应用，所以vmtx和vhea也可以删除掉
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VHEA_TAG);
+            if (TbIndex != -1){
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VMTX_TAG);
+            if (TbIndex != -1){
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT PrepareExtractFont()
+
+        byte[] FilterGlyphs(ref HYDecodeC Decode, ref List<UInt32> lstunicode)
+        {
+            int stUni = lstunicode.Count;
+            int iEntryIndex = Decode.tbDirectory.FindTableEntry((int)TABLETAG.GLYF_TAG);
+            CTableEntry entry = Decode.tbDirectory.vtTableEntry[iEntryIndex];
+            Decode.DecodeStream.Seek(entry.offset, SeekOrigin.Begin);
+
+            Decode.codemap.lstCodeMap.Clear();
+            // 第一步确定miss char
+            HYCodeMapItem mapItm = new HYCodeMapItem();
+            mapItm.Unicode = 0xffff;
+            mapItm.GID = 0;
+            Decode.codemap.lstCodeMap.Add(mapItm);
+
+            uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];
+            for (int i = 0; i < stUni; i++)
+            {
+                int iIndex = Decode.FindGryphIndexByUnciode(lstunicode[i]);
+                if (CheckGid(ref Decode.codemap.lstCodeMap, iIndex)) {
+                    HYCodeMapItem cdMapItem = new HYCodeMapItem();
+                    cdMapItem.GID = iIndex;
+                    cdMapItem.Unicode = lstunicode[i];                    
+                    Decode.codemap.lstCodeMap.Add(cdMapItem);
+
+                    uint lca0 = Decode.tbLoca.vtLoca[iIndex];
+                    uint lca1 = Decode.tbLoca.vtLoca[iIndex + 1];
+                    if (lca1 > lca0) {
+                        Decode.DecodeStream.Seek(entry.offset + lca0, SeekOrigin.Begin);
+
+                        List<int> vtCmpGID = new List<int>();
+                        IsCompositeGlyph(ref Decode, ref vtCmpGID);
+
+                        for (int j = 0; j < vtCmpGID.Count; j++) {
+                            if (CheckGid(ref Decode.codemap.lstCodeMap, vtCmpGID[j])) {
+                                if (Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] > Decode.tbLoca.vtLoca[vtCmpGID[j]]){
+                                    ulGlyphsLen += Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] - Decode.tbLoca.vtLoca[vtCmpGID[j]];
+
+                                    HYCodeMapItem item = new HYCodeMapItem();
+                                    item.GID = vtCmpGID[j];
+                                    item.Unicode = 0xffffffff;
+                                    Decode.codemap.lstCodeMap.Add(cdMapItem);
+                                }
+                            }
+                        }
+                        ulGlyphsLen += Decode.tbLoca.vtLoca[iIndex + 1] - Decode.tbLoca.vtLoca[iIndex];
+                    }
+                }
+            }
+
+            // 分配好子集字形内存
+            uint Real = (ulGlyphsLen + 3) / 4 * 4;
+            byte[] pOutGlyphs = new byte[Real];
+
+            CLoca local = new CLoca();
+            // 第一步抽取miss char数据		
+            local.vtLoca.Add(0);
+            uint glyphlenth = Decode.tbLoca.vtLoca[1] - Decode.tbLoca.vtLoca[0];
+            if (glyphlenth > 0){
+                Decode.DecodeStream.Seek(entry.offset + Decode.tbLoca.vtLoca[0], SeekOrigin.Begin);
+                Decode.DecodeStream.Read(pOutGlyphs, 0, (int)glyphlenth);
+            }
+
+            uint iBuffOffset = glyphlenth;
+            for (int i = 1; i < Decode.tbMaxp.numGlyphs; i++) {
+                if (CheckGid(ref Decode.codemap.lstCodeMap, i)){
+                    local.vtLoca.Add(iBuffOffset);
+                }
+                else {
+                    local.vtLoca.Add(iBuffOffset);
+                    // 获取GLYH的长度
+                    glyphlenth = Decode.tbLoca.vtLoca[i + 1] - Decode.tbLoca.vtLoca[i];
+                    Decode.DecodeStream.Seek(entry.offset + Decode.tbLoca.vtLoca[i], SeekOrigin.Begin);
+                    Decode.DecodeStream.Read(pOutGlyphs, (int)iBuffOffset, (int)glyphlenth);
+                    iBuffOffset += glyphlenth;
+                }
+            }
+            local.vtLoca.Add(iBuffOffset);
+            Decode.tbLoca = local;
+
+            return pOutGlyphs;
+
+        }	// end of int CFontExtract::FilterGlyphs()
+
+        bool IsCompositeGlyph(ref HYDecodeC Decode, ref List<int> vtCmpGID)
+        {
+            ushort usTmp = 0;            
+            ushort flags = 0;
+
+            byte[] array = new byte[4];
+            Decode.DecodeStream.Read(array, 0, 2);
+            short sCmp = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
+
+            //numberOfContours
+            if (sCmp == -1) {
+                do {
+                    // box
+                    Decode.DecodeStream.Seek(8, SeekOrigin.Current);
+
+                    //flags
+                    Decode.DecodeStream.Read(array, 0, 2);
+                    flags = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
+
+
+                    //glyphIndex
+                    Decode.DecodeStream.Read(array, 0, 2);
+                    usTmp = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
+
+                    if (CheckGid(ref vtCmpGID, (int)usTmp))
+                        vtCmpGID.Add(usTmp);                        
+
+                    if ((flags&CMPSTFLAG.GLYF_CMPST_ARG_1_AND_2_ARE_WORDS)>0) {
+                        Decode.DecodeStream.Seek(4, SeekOrigin.Current);
+                    }
+                    else  {
+                        Decode.DecodeStream.Seek(2, SeekOrigin.Current);
+                    }
+
+                    if ((flags&CMPSTFLAG.GLYF_CMPST_WE_HAVE_A_SCALE)>0) {
+                        Decode.DecodeStream.Seek(2, SeekOrigin.Current); 
+                    }
+                    else if ((flags & CMPSTFLAG.GLYF_CMPST_WE_HAVE_AN_X_AND_Y_SCALE)>0) {
+                        Decode.DecodeStream.Seek(4, SeekOrigin.Current);
+                    }
+                    else if ((flags & CMPSTFLAG.GLYF_CMPST_WE_HAVE_A_TWO_BY_TWO)>0){
+                        Decode.DecodeStream.Seek(8, SeekOrigin.Current);
+                    }
+
+                } while ((flags & CMPSTFLAG.GLYF_CMPST_MORE_COMPONENT)>0);
+
+                return true;
+            }
+
+            return false;
+
+        }	// end of int IsCompositeGlyph()
+        bool CheckGid(ref List<int> vtGID, int iGid)
+        {
+            if (iGid == -1) return false;
+            
+            for (int i = 0; i < vtGID.Count; i++) {
+                if (vtGID[i] == iGid) return false;
+            }
+
+            return true;
+
+        }	// end of bool CheckGid
+
+        bool CheckGid(ref List<HYCodeMapItem> lstCodeMap, int iGid)
+        {
+            if (iGid == -1) return false;
+            
+            for (int i = 0; i < lstCodeMap.Count; i++)  {
+                if (lstCodeMap[i].GID == iGid) 
+                    return false;
+            }
+
+            return true;
+
+        }	// end of BOOL CFontExtract::CheckGid()
+
+
         public HYRESULT ModifyFontInfo(string strFileName, string strNewFileName,HYFontInfo Fntinf)
         {
             HYRESULT sult;
@@ -980,6 +2117,7 @@ namespace HYFontCodecCS
                     CTableEntry tbEncodeEntry = FontEncode.tbDirectory.vtTableEntry[iEncodeEntryIndex];
 
                     tbEncodeEntry.offset = (uint)FontEncode.EncodeStream.Position;
+                    tbEncodeEntry.length = HYDecodeEntry.length;
                     FontEncode.EncodeStream.Write(TabelData, 0, TabelData.Length);                    
                 }
             }
@@ -1007,8 +2145,9 @@ namespace HYFontCodecCS
         HYRESULT BulidCMAP(HYEncode FontEnCodec, List<uint> lstUnicoe)
         {
             int iEncodeEntryIndex = FontEnCodec.tbDirectory.FindTableEntry((UInt32)TABLETAG.CMAP_TAG);
-            CTableEntry tbEncodeEntry = FontEnCodec.tbDirectory.vtTableEntry[iEncodeEntryIndex];           
-            
+            CTableEntry tbEncodeEntry = FontEnCodec.tbDirectory.vtTableEntry[iEncodeEntryIndex];
+            tbEncodeEntry.offset = (uint)FontEnCodec.EncodeStream.Position;
+
             FontEnCodec.tbCmap = new CCmap();
             CMAP_TABLE_ENTRY entry = new CMAP_TABLE_ENTRY();
             entry.plat_ID = 3;
@@ -1100,10 +2239,9 @@ namespace HYFontCodecCS
                     default:
                         break;
                 }           
-            }
-
+            }           
+            
             tbEncodeEntry.length = (uint)tableData.Count;
-            tbEncodeEntry.offset = (uint)FontEnCodec.EncodeStream.Position;            
             FontEnCodec.EncodeStream.Write(tableData.ToArray(), 0, (int)tbEncodeEntry.length);
 
             uint iTail = 4 - tbEncodeEntry.length % 4;

@@ -1274,7 +1274,7 @@ namespace HYFontCodecCS
             }
 
             entry.offset = (uint)(FRStrm.Position - entry.offset);
-            FRStrm.Write(vtCmap.ToArray(), 0, vtCmap.Count);
+          FRStrm.Write(vtCmap.ToArray(), 0, vtCmap.Count);
 
             return 0;
 
@@ -5514,8 +5514,7 @@ namespace HYFontCodecCS
                     }
                     catch(Exception expt)
                     {
-                        Exception expt1 = new Exception(i.ToString());
-                        throw (expt1);
+                        throw (expt);
                     }
                     //endPtsOfContours
                     int stEndPtsCnturNum = vtendPtsOfContour.Count;
@@ -8011,13 +8010,30 @@ namespace HYFontCodecCS
 
             for (int i = 0; i < length; i++ )
             {
-                byte[] btCnv = new byte[4];
+                byte[] btCnv = new byte[4] {0,0,0,0};
                 btCnv[0] = btFile[Index++];
+                if (Index == btFile.Length) {
+                    btCnv = btCnv.Reverse().ToArray();
+                    Sum += BitConverter.ToUInt32(btCnv, 0);
+                    break;
+                }
                 btCnv[1] = btFile[Index++];
+                if (Index == btFile.Length)
+                {
+                    btCnv = btCnv.Reverse().ToArray();
+                    Sum += BitConverter.ToUInt32(btCnv, 0);
+                    break;
+                }
                 btCnv[2] = btFile[Index++];
+                if (Index == btFile.Length)
+                {
+                    btCnv = btCnv.Reverse().ToArray();
+                    Sum += BitConverter.ToUInt32(btCnv, 0);
+                    break;
+                }
+
                 btCnv[3] = btFile[Index++];
                 btCnv = btCnv.Reverse().ToArray();
-
                 Sum += BitConverter.ToUInt32(btCnv, 0);
             }
 

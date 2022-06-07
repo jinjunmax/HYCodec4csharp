@@ -77,7 +77,5 @@ namespace HYFontCodecCS
         }   // end of public static HYRESULT ReadCharFileToUnicode()
 
 
-      
-
     }
 }

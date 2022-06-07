@@ -572,6 +572,23 @@ namespace HYFontCodecCS
         PREP_TAG	=	0x70726570,
         VHEA_TAG	=	0x76686561,
         VMTX_TAG	=	0x766D7478,
-     }   
+     }
+
+    public class CMPSTFLAG
+    {
+        public static ushort GLYF_CMPST_ARG_1_AND_2_ARE_WORDS = 0x0001;
+        public static ushort GLYF_CMPST_ARGS_ARE_XY_VALUES = 0x0002;
+        public static ushort GLYF_CMPST_ROUND_XY_TO_GRID = 0x0004;
+        public static ushort GLYF_CMPST_WE_HAVE_A_SCALE = 0x0008;
+        public static ushort GLYF_CMPST_RESERVE = 0x0010;
+        public static ushort GLYF_CMPST_MORE_COMPONENT = 0x0020;
+        public static ushort GLYF_CMPST_WE_HAVE_AN_X_AND_Y_SCALE = 0x0040;
+        public static ushort GLYF_CMPST_WE_HAVE_A_TWO_BY_TWO = 0x0080;
+        public static ushort GLYF_CMPST_WE_HAVE_INSTRUCTIONS = 0x0100;
+        public static ushort GLYF_CMPST_USE_MY_METRICS = 0x0200;
+        public static ushort GLYF_CMPST_OVERLAP_COMPOUND = 0x0400;
+        public static ushort GLYF_CMPST_SCALED_COMPONENT_OFFSET = 0x0800;
+        public static ushort GLYF_CMPST_UNSCALED_COMPONENT_OFFSET = 0x1000;
+    }
 
 }   // end of 

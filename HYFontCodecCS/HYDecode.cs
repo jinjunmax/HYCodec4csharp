@@ -181,10 +181,6 @@ namespace HYFontCodecCS
             if (FontType == FONTTYPE.CFF)
             {
                 return HYRESULT.NO_TTF;
-
-                Chars.Type = "OpenType";
-                rtResult = DecodeCFF();
-                if (rtResult != HYRESULT.NOERROR) return rtResult;
             }
 
             // 解析Name表
@@ -1125,8 +1121,7 @@ namespace HYFontCodecCS
             if (iEntryIndex == -1) return HYRESULT.HHEA_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
             FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
-
-            int iCharIndex = 0;
+            
             for (UInt16 i = 0; i < Hhea.numberOfHMetrics; i++)
             {
                 HMTX_LONGHORMERTRIC Longhormetric = new HMTX_LONGHORMERTRIC();

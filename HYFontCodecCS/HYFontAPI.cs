@@ -266,7 +266,9 @@ namespace HYFontCodecCS
         public static HYRESULT ExtractFont(string FontName, string SubName, ref List<UInt32> lstUnicode, ref List<UInt32> lstMssUni)
         {
             CFontManager Extract = new CFontManager();
-            return Extract.ExtractFont(FontName, SubName, lstUnicode, 1, ref lstMssUni);
+            //return Extract.ExtractFont(FontName, SubName, lstUnicode, 1, ref lstMssUni);
+
+            return Extract.GetSubset(FontName, SubName, lstUnicode, 1, ref lstMssUni);
 
         }   // end of public int ExtractFont()
         public static HYRESULT ModifyFontInfo(string strFileName, string strNewFileName, HYFontInfo Fntinf)
@@ -296,10 +298,11 @@ namespace HYFontCodecCS
             return ttc.FontToTTCForAFDK_P(lstFontName);
 
         }   // end of public static HYRESULT FontToTTCForAFDK_P()        
-        public static HYRESULT TTCToFonts(string strTTCName)
+        public static HYRESULT TTCToFonts(string strTTCName, ref List<string> lstTTFs)
         {
            CTTC ttc = new CTTC();
-           return ttc.TTCToFonts(strTTCName);
+
+           return ttc.TTCToFonts(strTTCName, ref lstTTFs);
             
         }   // end of public static HYRESULT TTCToFonts()        
 

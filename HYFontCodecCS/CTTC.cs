@@ -100,8 +100,9 @@ namespace HYFontCodecCS
 
         }   // end of public bool FontToTTC()
 
-        public HYRESULT TTCToFonts(string strTTC)
+        public HYRESULT TTCToFonts(string strTTC,ref List<string> lstTTFs )
         {
+            lstTTFs.Clear();
             try
             {
                 UInt32 ulTmp;                
@@ -141,12 +142,14 @@ namespace HYFontCodecCS
                     if (!TTCToFont(flOpen, lTableOffset, ref strFontName))
                         return HYRESULT.TTC_TO_FONT;
 
+                    lstTTFs.Add(strFontName);
 
                 }
             }
             catch (Exception ext)
             {
                 ext.ToString();
+                lstTTFs.Clear();
                 throw;
             }
 

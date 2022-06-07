@@ -24,9 +24,6 @@ namespace HYFontCodecCS
 
             }
 
-
-
-
             return HYRESULT.NOERROR;
 
         }   // end of public HYRESULT FontOpen()
