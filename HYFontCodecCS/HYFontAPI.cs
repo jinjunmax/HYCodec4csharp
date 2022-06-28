@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using FontParserEntity;
 
 namespace HYFontCodecCS
 {
@@ -304,8 +305,60 @@ namespace HYFontCodecCS
 
            return ttc.TTCToFonts(strTTCName, ref lstTTFs);
             
-        }   // end of public static HYRESULT TTCToFonts()        
+        }   // end of public static HYRESULT TTCToFonts()
 
+        // 检查两个字形的兼容性
+         public static int CheckCmptbl(CharInfo baseChar, CharInfo cmprChar, ref String strInfo)
+        {
+            if ((baseChar.IsComponent == 1) || cmprChar.IsComponent == 1) {
+                strInfo = "组件字形不做兼容性检查";
+                return 0;
+            }
+
+            if (baseChar.ContourCount != cmprChar.ContourCount) {
+                strInfo = "两个字库轮廓数量不一致";
+                return 1;
+            }
+
+            for (int i = 0; i < baseChar.ContourCount; i++)
+            {
+                if (HYBase.CheckCoincide(baseChar.ContourInfo[i].PtInfo))
+                {
+                    strInfo = "Base字形轮廓轮廓有重合点";
+                    return 2;
+
+                }
+            }
+
+            for (int i = 0; i < cmprChar.ContourCount; i++)
+            {
+                if (HYBase.CheckCoincide(cmprChar.ContourInfo[i].PtInfo))
+                {
+                    strInfo = "compare字形轮廓轮廓有重合点";
+                    return 2;
+                }
+            }
+
+            for (int i=0; i<baseChar.ContourCount; i++) {
+                if (baseChar.ContourInfo[i].PointCount != cmprChar.ContourInfo[i].PointCount) {
+                    strInfo = "第" + (i + 1).ToString()+"轮廓,点数量不一致。";
+                    return 3;
+                }
+
+                for (int j=0; j< baseChar.ContourInfo[i].PointCount; j++){
+
+                    if (baseChar.ContourInfo[i].PtInfo[j].PtType !=
+                        cmprChar.ContourInfo[i].PtInfo[j].PtType){
+
+                        strInfo = "第"+(i + 1).ToString() +"轮廓,第"+(j+i).ToString()+"点类型不一致。";
+                        return 4;
+                    }
+                }
+            }
+
+            return 0;
+
+        }   // end of public static int CheckCmptbl()
 
     }
 }

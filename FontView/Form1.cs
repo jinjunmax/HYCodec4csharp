@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
@@ -15,12 +16,19 @@ namespace FontView
     public partial class Form1 : Form
     {
         HYDecodeC FontDec;
-        int iCunGlyphInx = 0;       
+        int iCunGlyphInx = 0;
 
         public Form1()
         {
             InitializeComponent();
+            edt_ThknssX.Text = "50";
+            edt_ThknssY.Text = "50";
         }
+
+        ~Form1()
+        {
+           
+        }        
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -181,8 +189,7 @@ namespace FontView
         }
 
         private void SubSetFont_Click(object sender, EventArgs e)
-        {
-            /*
+        {   
             string strFontFile, strTxtFile;
             OpenFileDialog FntfleDlg = new OpenFileDialog();
             FntfleDlg.Filter = "truetype files (*.ttf)|*.ttf|All files (*.*)|*.*";
@@ -203,10 +210,19 @@ namespace FontView
                         SubSetDlg.Filter = "truetype files (*.ttf)|*.ttf|All files (*.*)|*.*";
                         if (SubSetDlg.ShowDialog() == DialogResult.OK)
                         {
-                            HYRESULT hr;
+                            HYRESULT hr = HYRESULT.NOERROR;
                             string strSubsetName = SubSetDlg.FileName;
                             List<UInt32> lstMssUni = new List<UInt32>();
-                            hr = HYFontAPI.ExtractFont(strFontFile, strSubsetName, ref lstUnicode, ref lstMssUni);
+
+                            DateTime tm1 = DateTime.Now;
+                            for (int i=99; i<100; i++)
+                            {  
+                                hr = HYFontAPI.ExtractFont(strFontFile, strSubsetName, ref lstUnicode, ref lstMssUni);
+                            }
+                            DateTime tm2 = DateTime.Now;
+                            double dbspan = (tm2 - tm1).TotalSeconds;
+
+                            MessageBox.Show(dbspan.ToString());
 
                             if (hr == HYRESULT.NOERROR)
                             {
@@ -224,24 +240,7 @@ namespace FontView
                     }                  
                 }               
             }
-            */
-            
-            HYFontInfo inf = new HYFontInfo();
-            inf.Head_XMax = 0;
-            inf.Head_XMin = 0;
-            inf.Head_YMax = 0;
-            inf.Head_YMin = 0;
-            inf.HHEA_Asc = 0;
-            inf.HHEA_Des = 0;
-            inf.OS_TypoAsc = 0;
-            inf.OS_TypoDes = 0;
-            inf.OS_WinAsc = 0;
-            inf.OS_WinDes = 0;
-
-            HYRESULT  hr = HYFontAPI.ModifyFontInfo("d:\\CDK-Pracharath.ttf", "d:\\newCDK-Pracharath.ttf", inf);
-            hr = HYFontAPI.ModifyFontInfo("d:\\CDK-Pracharath.ttf", "d:\\newCDK-Pracharath-01.ttf", inf);
-
-        }
+        }   // end of private void SubSetFont_Click()
 
         /// <summary>
         /// TTF to Eot
@@ -406,8 +405,150 @@ namespace FontView
             FntfleDlg.Multiselect = false;
             FntfleDlg.Title = "Font Browser";
 
+            String strBaseFile;
+            if (FntfleDlg.ShowDialog() != DialogResult.OK) return;
+            strBaseFile = FntfleDlg.FileName;
 
 
+            FntfleDlg = new OpenFileDialog();
+            FntfleDlg.Filter = "truetype files (*.ttf)|*.ttf|opentype files (*.otf)|*.otf";
+
+            // Allow the user to select multiple images.
+            FntfleDlg.Multiselect = false;
+            FntfleDlg.Title = "Font Browser";
+
+            String strCmprFile;
+            if (FntfleDlg.ShowDialog() != DialogResult.OK) return;
+            strCmprFile = FntfleDlg.FileName;
+
+        }   // end of private void button10_Click(object sender, EventArgs e)
+
+        [DllImport("FT_Glyphs.dll", EntryPoint = "SetOutlineThickness", CallingConvention = CallingConvention.Cdecl)]
+        extern static IntPtr SetOutlineThickness(byte[] pOutline, ref int length, int xstrength, int ystrength);
+        [DllImport("FT_Glyphs.dll", EntryPoint = "ReleaseOutlineBuffer", CallingConvention = CallingConvention.Cdecl)]
+        extern static void ReleaseOutlineBuffer();
+
+        private void btn_Thickness_Click(object sender, EventArgs e)
+        {
+            if (edt_ThknssX.TextLength == 0) return;
+            int iXStrength = Convert.ToInt32(edt_ThknssX.Text, 10);
+            if (edt_ThknssY.TextLength == 0) return;
+            int iYStrength = Convert.ToInt32(edt_ThknssY.Text, 10);
+
+            string StringInf = "";
+            CharInfo GlyfItem = FontDec.GlyphChars.CharInfo[iCunGlyphInx];
+            if (GlyfItem.ContourCount == 0) return;
+
+            CharInfoToStringInfo(GlyfItem, ref StringInf);
+
+            byte[] inChar = System.Text.Encoding.ASCII.GetBytes(StringInf);
+            int iLength = inChar.Length;
+            IntPtr pRet = SetOutlineThickness(inChar, ref iLength, iXStrength, iYStrength);
+            if(pRet != null) {
+                string strRet = Marshal.PtrToStringAnsi(pRet);
+
+                CharInfo charInf = new CharInfo();
+                charInf.AdHeight = GlyfItem.AdHeight;
+                charInf.AdWidth = GlyfItem.AdWidth;
+                charInf.Name = GlyfItem.Name;
+                charInf.Unicode = GlyfItem.Unicode;
+                charInf.Section = GlyfItem.Section;
+                StringInfoToChars(ref charInf, strRet);
+                myPic2.SetGlyphInfo(charInf, FontDec.GlyphChars, FontDec.tbHead, FontDec.tbHhea, FontDec.FntType);
+            }
+
+        }   // end of private void btn_Thickness_Click()
+
+        private void CharInfoToStringInfo(CharInfo GlyfItem, ref string StringInf)
+        {
+            string strPt = "";
+            string strFlag = "";
+            string strendPts = "";
+
+            int iPtIndx = 0;
+            
+            for (int i=0; i< GlyfItem.ContourCount;i++)
+            {
+                for (int j=0; j<GlyfItem.ContourInfo[i].PointCount; j++)
+                {
+                    strPt += GlyfItem.ContourInfo[i].PtInfo[j].X.ToString();
+                    strPt += ".";
+                    strPt += GlyfItem.ContourInfo[i].PtInfo[j].Y.ToString();
+                    strPt += "|";
+
+                    strFlag += GlyfItem.ContourInfo[i].PtInfo[j].PtType.ToString();
+                    strFlag += ",";
+
+                    iPtIndx++;
+                }
+                strendPts += (iPtIndx - 1).ToString();
+                strendPts += ",";
+            }
+
+            strPt = strPt.Substring(0, strPt.Length - 1);
+            strPt += ";";
+            strFlag = strFlag.Substring(0, strFlag.Length - 1);
+            strFlag += ";";
+            strendPts = strendPts.Substring(0, strendPts.Length - 1);
+            strendPts += ";";
+
+            strPt += strFlag;
+            strPt += strendPts;
+
+            StringInf = strPt;
+
+        }   // end of private void CharInfoToStringInfo()
+
+
+        private void StringInfoToChars(ref CharInfo GlyfItem, string StringInf)
+        {            
+            string[] strSZ = StringInf.Split(';');
+            if (strSZ.Length < 3) return;
+
+            //拆分点;            
+            string[] szPoints = strSZ[0].Split('|');
+            string[] szflgs = strSZ[1].Split(',');
+            string[] szEndpts = strSZ[2].Split(',');
+
+            GlyfItem.ContourCount = szEndpts.Length;
+
+            int iContouIndx = 0;
+
+            ContourInfo cnturinf = new ContourInfo();
+            for  (int i=0; i< szPoints.Length; i++)
+            {
+                string[] szpt = szPoints[i].Split('.');              
+                PtInfo pt = new PtInfo();
+                pt.X = int.Parse(szpt[0]);
+                pt.Y = int.Parse(szpt[1]);
+                pt.PtType = int.Parse(szflgs[i]);
+
+                cnturinf.PtInfo.Add(pt);
+                if (szEndpts.Length != iContouIndx)
+                {
+                    if (i == int.Parse(szEndpts[iContouIndx]))
+                    {
+                        if (iContouIndx==0)
+                        {
+                            cnturinf.PointCount = i + 1;
+                        }
+                        else
+                        {
+                            cnturinf.PointCount = int.Parse(szEndpts[iContouIndx])- int.Parse(szEndpts[iContouIndx-1]);
+                        }
+                        
+                        GlyfItem.ContourInfo.Add(cnturinf);
+                        cnturinf = new ContourInfo();
+                        iContouIndx++;
+                    }
+                }
+            }
+
+        }   // end of private void StringInfoToChars()
+
+        private void Form1_FormClosed(object sender, FormClosedEventArgs e)
+        {
+           ReleaseOutlineBuffer();
         }
     }
 }

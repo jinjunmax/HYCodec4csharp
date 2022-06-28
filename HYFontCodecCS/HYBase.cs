@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.UI;
 using FontParserEntity;
+using System.Windows;
 
 namespace HYFontCodecCS
 {
@@ -95,6 +96,27 @@ namespace HYFontCodecCS
             return ((n + align - 1) & (~(align - 1)));
 
         }  // end of uint HY_calc_align()
+
+        //
+        public static bool CheckCoincide(List<PtInfo> ptLst)
+        {
+            for (int i=0; i< ptLst.Count; i++)
+            {
+                PtInfo pt1 = ptLst[i];
+                Rect rt1 = new Rect(new Point(pt1.X - 1, pt1.Y - 1),
+                    new Point(pt1.X + 1, pt1.Y + 1));
+                for (int j = i+1; j < ptLst.Count; j++)
+                {
+                    PtInfo pt2 = ptLst[j];
+                    if (rt1.Contains(new Point(pt2.X,pt2.Y)))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
 
         public static void CountBoundBox(int iGID, ref CharsInfo charsinf, FONTTYPE fntType)
         {
@@ -572,7 +594,7 @@ namespace HYFontCodecCS
         PREP_TAG	=	0x70726570,
         VHEA_TAG	=	0x76686561,
         VMTX_TAG	=	0x766D7478,
-     }
+    }
 
     public class CMPSTFLAG
     {

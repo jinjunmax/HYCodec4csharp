@@ -58,201 +58,35 @@ namespace HYFontCodecCS
         /// <returns>HYRESULT</returns> 
         public HYRESULT ExtractFont(string strTTFFile, string strNewTTFFile, List<UInt32> lstunicode, int CMAP, ref List<UInt32> lstMssUni)
         {
-            HYRESULT sult;
             HYDecodeC FontDecode = new HYDecodeC();
-            try {
-                FontDecode.FontOpen(strTTFFile);
-            }
-            catch (Exception ext) {
-                ext.ToString();
-                throw;
-            }
-
-            HYEncode FontEncode = new HYEncode();
-            sult = FontDecode.DecodeTableDirectory();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-
-            if (FontDecode.tbDirectory.version.value != 1 && FontDecode.tbDirectory.version.fract != 0)
-            {
-                FontDecode.FontClose();
-                return HYRESULT.NO_TTF;	// 不是truetype            
-            }
-            sult = FontDecode.DecodeCmap();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-
-            FontEncode.tbCmap = FontDecode.tbCmap;
-            sult = FontDecode.DecodeMaxp();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-            FontEncode.tbMaxp = FontDecode.tbMaxp;
-            sult = FontDecode.DecodeHead();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-            FontEncode.tbHead = FontDecode.tbHead;
-            sult = FontDecode.DecodeLoca();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-            FontEncode.tbLoca = FontDecode.tbLoca;
-            sult = FontDecode.DecodeHhea();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-            FontEncode.tbHhea = FontDecode.tbHhea;
-            sult = FontDecode.DecodeHmtx();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-            FontEncode.tbHmtx = FontDecode.tbHmtx;
-            sult = FontDecode.DecodePost();
-            if (sult != HYRESULT.NOERROR)
-            {
-                FontDecode.FontClose();
-                return sult;
-            }
-
-            FontDecode.DecodeCOLR();
-
-            FontEncode.tbPost = FontDecode.tbPost;
-            FontEncode.tbPost.version.value = 3;
-            FontEncode.tbPost.version.fract = 0;
-
-            // 为了压缩webfont的传输数据量，只保留字库格式强制要求必须保留的八个表
-            int TableIndex = -1;
-            TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VHEA_TAG);
-            if (TableIndex != -1)
-            {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
-            TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VMTX_TAG);
-            if (TableIndex != -1)
-            {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
-            // 抽取子字库后会出现字符缺失或字序打乱，导致GSUB映射错误，所以这个需要删除
-            TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GSUB_TAG);
-            if (TableIndex != -1)
-            {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
-            TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GPOS_TAG);
-            if (TableIndex != -1)
-            {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
-            //这个在抽取字库时，如果不删掉会无法在webfont上显示（可能）
-            TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VDMX_TAG);
-            if (TableIndex != -1)
-            {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
-            //这个在抽取字库时，如果不删掉会无法在webfont上显示（必现）
-            TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.HDMX_TAG);
-            if (TableIndex != -1)
-            {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
-            //在子字库中没有意义
-            TableIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.LTSH_TAG);
-            if (TableIndex != -1)
-            {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TableIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
+            HYRESULT sult = PrepareExtractFont(strTTFFile, ref FontDecode);
+            if (sult != HYRESULT.NOERROR) return sult;
 
             List<byte> lstGlyphData = new List<byte>();
             List<uint> vtTableFlag = new List<uint>();
 
-            // 只抽取字形，但是不清除码位，可以保持其它表不变。
-            if (CMAP == 0)
-            {
-                try
-                {
-                    Extrace(FontDecode, ref FontEncode, lstunicode, ref lstGlyphData);
+            HYEncode FontEncode = new HYEncode();
+          
+            sult = Extrace(FontDecode, ref FontEncode, lstunicode, ref lstGlyphData, ref lstMssUni);
+                
 
-                    vtTableFlag.Add((uint)TABLETAG.LOCA_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.GLYF_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.HEAD_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.MAXP_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.POST_TAG);
+            vtTableFlag.Add((uint)TABLETAG.LOCA_TAG);
+            vtTableFlag.Add((uint)TABLETAG.GLYF_TAG);
+            vtTableFlag.Add((uint)TABLETAG.HEAD_TAG);
+            vtTableFlag.Add((uint)TABLETAG.MAXP_TAG);
+            vtTableFlag.Add((uint)TABLETAG.POST_TAG);
+            vtTableFlag.Add((uint)TABLETAG.HHEA_TAG);
+            vtTableFlag.Add((uint)TABLETAG.HMTX_TAG);
+            vtTableFlag.Add((uint)TABLETAG.CMAP_TAG);
 
-                    BulidFont(strNewTTFFile, FontDecode, FontEncode, lstGlyphData, vtTableFlag, lstunicode);
-                }
-                catch (Exception ex)
-                {
-                    ex.ToString();
-                    FontDecode.FontClose();
-                    throw;
-                }
-            }
-            // 抽取字形，并且清除码位，包括HMTXT等都需要重新处理。
-            if (CMAP == 1)
-            {
-                try
-                {
-                    sult = Extrace2(FontDecode, ref FontEncode, lstunicode, ref lstGlyphData, ref lstMssUni);
-                    if (sult != HYRESULT.NOERROR)
-                    {
-                        FontDecode.FontClose();
-                        return sult;
-                    }
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.COLR_TAG) != -1)
+                vtTableFlag.Add((uint)TABLETAG.COLR_TAG);
 
-                    vtTableFlag.Add((uint)TABLETAG.LOCA_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.GLYF_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.HEAD_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.MAXP_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.POST_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.HHEA_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.HMTX_TAG);
-                    vtTableFlag.Add((uint)TABLETAG.CMAP_TAG);
-
-                    if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.COLR_TAG) != -1)
-                        vtTableFlag.Add((uint)TABLETAG.COLR_TAG);
-
-
-                    sult = BulidFont(strNewTTFFile, FontDecode, FontEncode, lstGlyphData, vtTableFlag, lstunicode);
-                    if (sult != HYRESULT.NOERROR)
-                    {
-                        FontDecode.FontClose();
-                        return sult;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    ex.ToString();
-                    FontDecode.FontClose();
-                    throw;
-                }
-            }
+            sult = BulidFont(strNewTTFFile, FontDecode, FontEncode, lstGlyphData, vtTableFlag, lstunicode);
 
             FontDecode.FontClose();
-            return HYRESULT.NOERROR;
+
+            return sult;
 
         }   // end of HYRESULT ExtractFont()
 
@@ -263,15 +97,18 @@ namespace HYFontCodecCS
             if (sult != HYRESULT.NOERROR) return sult;
 
             FontDecode.codemap = new HYCodeMap();
-            byte[] pOutGlyphs = FilterGlyphs(ref FontDecode, ref lstunicode);
+            ushort maxGID = 0;
+            byte[] pOutGlyphs = FilterGlyphs(ref FontDecode, ref lstunicode, ref maxGID);
 
-            MakeFont(ref FontDecode, pOutGlyphs, strNewTTFFile);
+            MakeFont(ref FontDecode, pOutGlyphs, strNewTTFFile, maxGID);
+
+            FontDecode.FontClose();
 
             return HYRESULT.NOERROR;
 
         }   // end of public HYRESULT GetSubset()
 
-        public void MakeFont(ref HYDecodeC FontDecode, byte[] pGlpyData, string strNewTTFFile)
+        public void MakeFont(ref HYDecodeC FontDecode, byte[] pGlpyData, string strNewTTFFile, ushort maxGID)
         {   
             try {
                 if (File.Exists(strNewTTFFile)){
@@ -291,7 +128,6 @@ namespace HYFontCodecCS
             FontEncode.codemap = FontDecode.codemap;
             FontEncode.EncodeTableDirectory();
 
-            //WriteTableEntry(ref FontEncode.FRStrm, FontDecode.tbDirectory);
             for (int i = 0; i != FontEncode.tbDirectory.vtTableEntry.Count; i++)
             {
                 CTableEntry HYEntry = FontEncode.tbDirectory.vtTableEntry[i];
@@ -309,6 +145,35 @@ namespace HYFontCodecCS
                 {                    
                     MakeCMAP(ref FontEncode);                    
                     Encodecmap(ref FontEncode, ref HYEntry, FontEncode.codemap.lstCodeMap);
+                }
+                else if (HYEntry.tag == (uint)TABLETAG.POST_TAG)
+                {
+                    FontDecode.tbPost = new CPost();
+                    FontDecode.tbPost.version.value = 3;
+                    FontDecode.tbPost.version.fract = 0;
+                    FontDecode.tbPost.italicAngle.value = 0;
+                    FontDecode.tbPost.italicAngle.fract = 0;
+                    FontDecode.tbPost.underlinePosition = -75;
+                    FontDecode.tbPost.underlineThickness = 50;
+                    FontDecode.tbPost.isFixedPitch = 0;
+                    FontDecode.tbPost.minMemType42 = 0;
+                    FontDecode.tbPost.maxMemType42 = 0;
+                    FontDecode.tbPost.minMemType1 = 0;
+                    FontDecode.tbPost.maxMemType1 = 0;
+                    Bulidepost(ref FontEncode.FRStrm, ref HYEntry, FontDecode);
+                    
+                }
+                else if(HYEntry.tag == (uint)TABLETAG.HHEA_TAG)
+                {
+                    Bulidhhea(ref FontEncode.FRStrm, ref HYEntry, FontDecode, maxGID);
+                }
+                else if (HYEntry.tag == (uint)TABLETAG.HMTX_TAG)
+                {
+                    Buildhmtx(ref FontEncode.FRStrm, ref HYEntry, FontDecode, maxGID);
+                }
+                else if (HYEntry.tag == (uint)TABLETAG.MAXP_TAG)
+                {
+                    Buildmaxp(ref FontEncode.FRStrm, ref HYEntry, FontDecode, maxGID);
                 }
                 else
                 {
@@ -350,32 +215,14 @@ namespace HYFontCodecCS
             UInt32 Sum = 0;
             Int32 Index = 0;
             Int32 length = ((btFile.Length + 3) & ~3) / sizeof(Int32);
+            if (length % 4 != 0) return 0;
 
             for (int i = 0; i < length; i++)
             {
                 byte[] btCnv = new byte[4] { 0, 0, 0, 0 };
                 btCnv[0] = btFile[Index++];
-                if (Index == btFile.Length)
-                {
-                    btCnv = btCnv.Reverse().ToArray();
-                    Sum += BitConverter.ToUInt32(btCnv, 0);
-                    break;
-                }
                 btCnv[1] = btFile[Index++];
-                if (Index == btFile.Length)
-                {
-                    btCnv = btCnv.Reverse().ToArray();
-                    Sum += BitConverter.ToUInt32(btCnv, 0);
-                    break;
-                }
                 btCnv[2] = btFile[Index++];
-                if (Index == btFile.Length)
-                {
-                    btCnv = btCnv.Reverse().ToArray();
-                    Sum += BitConverter.ToUInt32(btCnv, 0);
-                    break;
-                }
-
                 btCnv[3] = btFile[Index++];
                 btCnv = btCnv.Reverse().ToArray();
                 Sum += BitConverter.ToUInt32(btCnv, 0);
@@ -418,6 +265,107 @@ namespace HYFontCodecCS
 
         }	// end of void BulidLOCAL()
 
+        public HYRESULT Bulidepost(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode)
+        {
+            HYEntry.offset = (uint)FWStrm.Position;
+
+            UInt16 usTmp = 0;
+            UInt32 ulTmp = 0;
+            byte[] btTmp;
+
+            //version            
+            usTmp = hy_cdr_int16_to((ushort)FontDecode.tbPost.version.value);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            usTmp = 0;
+            //usTmp = hy_cdr_int16_to(FontDecode.tbPost.Format.fract);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            // italicAngle
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbPost.italicAngle.value);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            usTmp = hy_cdr_int16_to(FontDecode.tbPost.italicAngle.fract);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //underlinePosition
+            if (FontDecode.tbPost.underlinePosition == 0)
+            {
+                FontDecode.tbPost.underlinePosition = Head.yMin;
+            }
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbPost.underlinePosition);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //UnderlineThickness
+            if (FontDecode.tbPost.underlineThickness == 0)
+            {
+                FontDecode.tbPost.underlineThickness = (Int16)(Head.unitsPerEm / 20);
+            }
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbPost.underlineThickness);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            //isFixedPitch
+            ulTmp = hy_cdr_int16_to((UInt16)FontDecode.tbPost.isFixedPitch);
+            btTmp = BitConverter.GetBytes(ulTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            ulTmp = 0;
+            btTmp = BitConverter.GetBytes(ulTmp);
+            //minMemType42
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //maxMemType42
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //minMemType1
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //maxMemType1
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            if (FontDecode.tbPost.version.value == 2 && FontDecode.tbPost.version.fract == 0)
+            {
+                // numberOfGlyphs
+                usTmp = hy_cdr_int16_to(FontDecode.tbPost.PostFormat2.usNumberOfGlyphs);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+
+                //glyphNameIndex
+                for (int i = 0; i < FontDecode.tbPost.PostFormat2.usNumberOfGlyphs; i++)
+                {
+                    usTmp = hy_cdr_int16_to(FontDecode.tbPost.PostFormat2.lstGlyphNameIndex[i]);
+                    btTmp = BitConverter.GetBytes(usTmp);
+                    FWStrm.Write(btTmp, 0, btTmp.Length);
+                }
+                //names
+                int st = FontDecode.tbPost.lstStandString.Count;
+                for (int i = 258; i < st; i++)
+                {
+                    byte[] szString = System.Text.Encoding.Default.GetBytes(FontDecode.tbPost.lstStandString[i]);
+                    byte strlen = (byte)szString.Length;
+
+                    FWStrm.WriteByte(strlen);
+                    FWStrm.Write(szString, 0, strlen);
+                }
+            }
+
+            HYEntry.length = (uint)FWStrm.Position - HYEntry.offset;
+            uint iTail = 4 - HYEntry.length % 4;
+            if (HYEntry.length % 4 > 0)
+            {
+                byte c = 0;
+                for (int i = 0; i < iTail; i++)
+                {
+                    FWStrm.WriteByte(c);
+                }
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of protected HYRESULT Bulidepost()
+
+
         void BulidGlyph(ref FileStream FWStrm, ref CTableEntry HYEntry, byte[] pGlpyData)
         {            
             //pGlpyData.Length 已经是4字节对齐了;
@@ -428,6 +376,258 @@ namespace HYFontCodecCS
             HYEntry.checkSum = CalcFontTableChecksum(pGlpyData);
 
         }	// end of void BulidGlyph()
+
+        public HYRESULT Buildmaxp(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode, ushort imaxGID)
+        {
+            HYEntry.offset = (uint)FWStrm.Position;
+
+            UInt16 usTmp;
+            byte[] btTmp;            
+
+            int GlyphNum = imaxGID+1;
+            if (FontType == FONTTYPE.CFF)
+            {
+                //Table version number
+                FontDecode.tbMaxp.version.value = 0;
+                btTmp = BitConverter.GetBytes(FontDecode.tbMaxp.version.value);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                FontDecode.tbMaxp.version.fract = 0x5000;
+                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.version.fract);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+
+                //numGlyphs
+                FontDecode.tbMaxp.numGlyphs = (UInt16)GlyphNum;
+                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.numGlyphs);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+            }
+            else
+            {
+                //Table version number                
+                usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbMaxp.version.value);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+
+                usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbMaxp.version.fract);
+                btTmp = BitConverter.GetBytes(FontDecode.tbMaxp.version.fract);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //numGlyphs
+                FontDecode.tbMaxp.numGlyphs = (UInt16)GlyphNum;
+                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.numGlyphs);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+               
+                //maxPoints                
+                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.maxPoints);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxContours                
+                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.maxContours);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxCompositePoints				
+                usTmp = 0;
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxCompositeContours
+                usTmp = 0;
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxZones
+                usTmp = hy_cdr_int16_to(2);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxTwilightPoints
+                usTmp = hy_cdr_int16_to(4);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxStorage
+                usTmp = hy_cdr_int16_to(32);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxFunctionDefs
+                usTmp = hy_cdr_int16_to(96);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxInstructionDefs
+                usTmp = hy_cdr_int16_to(96);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxStackElements
+                usTmp = hy_cdr_int16_to(256);
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxSizeOfInstructions
+                usTmp = 0;
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxComponentElements
+                usTmp = 0;
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+                //maxComponentDepth
+                usTmp = 0;
+                btTmp = BitConverter.GetBytes(usTmp);
+                FWStrm.Write(btTmp, 0, btTmp.Length);
+            }
+
+            HYEntry.length = (uint)FWStrm.Position - HYEntry.offset;
+            uint iTail = 4 - HYEntry.length % 4;
+            if (HYEntry.length % 4 > 0)
+            {
+                byte c = 0;
+                for (int i = 0; i < iTail; i++)
+                {
+                    FWStrm.WriteByte(c);
+                }
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of protected HYRESULT Buildmaxp()
+
+        public HYRESULT Bulidhhea(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode, ushort imaxGID)
+        {
+            HYEntry.offset = (uint)FWStrm.Position;
+
+            UInt16 usTmp;
+            byte[] btTmp;
+            
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.version.value);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.version.fract);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //Ascender
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.Ascender);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //Descender
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.Descender);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //LineGap			
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.LineGap);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //advanceWidthMax			
+            usTmp = hy_cdr_int16_to(FontDecode.tbHhea.advanceWidthMax);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //minLeftSideBearing            
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.minLeftSideBearing);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //minRightSideBearing            
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.minRightSideBearing);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //xMaxExtent            
+            usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHhea.xMaxExtent);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //caretSlopeRise		
+            usTmp = hy_cdr_int16_to(1);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //caretSlopeRun
+            usTmp = 0;
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //caretOffset            
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //reserved1			
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //reserved2			
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //reserved3			
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //reserved4			
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //metricDataFormat
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            //numberOfHMetrics
+            
+            int GID = imaxGID;
+            FontDecode.tbHhea.numberOfHMetrics = 0;
+            int iBaseadvanceWidth = FontDecode.tbHmtx.lstLonghormetric[GID--].advanceWidth;
+            while (GID >= 0)
+            {
+                if (FontDecode.tbHmtx.lstLonghormetric[GID].advanceWidth == iBaseadvanceWidth)
+                    FontDecode.tbHhea.numberOfHMetrics++;
+                else
+                    break;
+
+                GID--;
+            }
+            FontDecode.tbHhea.numberOfHMetrics = (ushort)(imaxGID+1- FontDecode.tbHhea.numberOfHMetrics);
+            usTmp = hy_cdr_int16_to(FontDecode.tbHhea.numberOfHMetrics);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+
+            HYEntry.length = (uint)FWStrm.Position - HYEntry.offset;
+            uint iTail = 4 - HYEntry.length % 4;
+            if (HYEntry.length % 4 > 0)
+            {
+                byte c = 0;
+                for (int i = 0; i < iTail; i++)
+                {
+                    FWStrm.WriteByte(c);
+                }
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT Bulidhhea()
+
+        public HYRESULT Buildhmtx(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode,ushort imaxGID)
+        {          
+            HYEntry.offset = (uint)FWStrm.Position;
+
+            UInt16 usTmp;
+            byte[] btTmp;
+
+            
+            UInt16 longhormetricNums = FontDecode.tbHhea.numberOfHMetrics;
+            UInt16 lefsidebearNums = (UInt16)(imaxGID+1 - FontDecode.tbHhea.numberOfHMetrics);
+
+            for (int i = 0; i < imaxGID+1; i++)
+            {
+                if (i < longhormetricNums)
+                {
+                    usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHmtx.lstLonghormetric[i].advanceWidth);
+                    btTmp = BitConverter.GetBytes(usTmp);
+                    FWStrm.Write(btTmp, 0, btTmp.Length);
+
+                    usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHmtx.lstLonghormetric[i].lsb);
+                    btTmp = BitConverter.GetBytes(usTmp);
+                    FWStrm.Write(btTmp, 0, btTmp.Length);
+                }
+                else
+                {
+                    usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbHmtx.lstLonghormetric[i].lsb);
+                    btTmp = BitConverter.GetBytes(usTmp);
+                    FWStrm.Write(btTmp, 0, btTmp.Length);
+                }
+            }
+
+            HYEntry.length = (uint)FWStrm.Position - HYEntry.offset;
+            uint iTail = 4 - HYEntry.length % 4;
+            if (HYEntry.length % 4 > 0)
+            {
+                byte c = 0;
+                for (int i = 0; i < iTail; i++)
+                {
+                    FWStrm.WriteByte(c);
+                }
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of protected HYRESULT Buildhmtx()
 
         void BulidHead(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode)
         {            
@@ -588,7 +788,7 @@ namespace HYFontCodecCS
             cmap.numSubTable = (ushort)cmap.vtCamp_tb_entry.Count;
             FontEncode.tbCmap = cmap;
 
-        }   // end of void CFontExtract::MakeCMAP()
+        }   // end of void MakeCMAP()
 
         public HYRESULT Encodecmap(ref HYEncode encode, ref CTableEntry HYEntry,List<HYCodeMapItem> lstCodeMap)
         {
@@ -1187,36 +1387,16 @@ namespace HYFontCodecCS
             FontDecode.DecodeHead();
             if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.LOCA_TAG) == -1) return HYRESULT.LOCA_DECODE;
             FontDecode.DecodeLoca();
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.HHEA_TAG) == -1) return HYRESULT.HHEA_DECODE;
+            FontDecode.DecodeHhea();
+            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.HMTX_TAG) == -1) return HYRESULT.HMTX_DECODE;
+            FontDecode.DecodeHmtx();
             if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.COLR_TAG) != -1) {
                 FontDecode.DecodeCOLR();
-            }            
-
-            // 抽取子字库后会出现字符缺失或字序打乱，导致GSUB映射错误，所以这个需要删除
-            int TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GSUB_TAG);
-            if (TbIndex!= -1) {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);                
-                FontDecode.tbDirectory.numTables--;
             }
-            //这个在抽取子库时，如果不删掉会无法在webfont上显示（可能）
-            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VDMX_TAG);
-            if (TbIndex != -1){
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
-                FontDecode.tbDirectory.numTables--;
-             }
-            //这个在抽取子库时，如果不删掉会无法在webfont上显示（必现）
-            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.HDMX_TAG);
-            if (TbIndex != -1) {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
-            //非必需表
-            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.LTSH_TAG);
-            if (TbIndex != -1)    {
-                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
-                FontDecode.tbDirectory.numTables--;
-            }
+            
             // subset多为web应用，所以vmtx和vhea也可以删除掉
-            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VHEA_TAG);
+            int TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VHEA_TAG);
             if (TbIndex != -1){
                 FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
                 FontDecode.tbDirectory.numTables--;
@@ -1226,12 +1406,67 @@ namespace HYFontCodecCS
                 FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
                 FontDecode.tbDirectory.numTables--;
             }
+            //为尽量缩小subset字库的体积，需要去掉非必须表。
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.VDMX_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.HDMX_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.LTSH_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.CVT_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.FPGM_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }            
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.JSTF_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GDEF_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.BASE_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }            
+            TbIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GSUB_TAG);
+            if (TbIndex != -1)
+            {
+                FontDecode.tbDirectory.vtTableEntry.RemoveAt(TbIndex);
+                FontDecode.tbDirectory.numTables--;
+            }
 
             return HYRESULT.NOERROR;
 
         }   // end of public HYRESULT PrepareExtractFont()
 
-        byte[] FilterGlyphs(ref HYDecodeC Decode, ref List<UInt32> lstunicode)
+        byte[] FilterGlyphs(ref HYDecodeC Decode, ref List<UInt32> lstunicode,ref ushort maxGID)
         {
             int stUni = lstunicode.Count;
             int iEntryIndex = Decode.tbDirectory.FindTableEntry((int)TABLETAG.GLYF_TAG);
@@ -1245,10 +1480,13 @@ namespace HYFontCodecCS
             mapItm.GID = 0;
             Decode.codemap.lstCodeMap.Add(mapItm);
 
-            uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];
+            uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];            
             for (int i = 0; i < stUni; i++)
             {
                 int iIndex = Decode.FindGryphIndexByUnciode(lstunicode[i]);
+                if (iIndex > maxGID) 
+                    maxGID = (ushort)iIndex;
+
                 if (CheckGid(ref Decode.codemap.lstCodeMap, iIndex)) {
                     HYCodeMapItem cdMapItem = new HYCodeMapItem();
                     cdMapItem.GID = iIndex;
@@ -1264,6 +1502,9 @@ namespace HYFontCodecCS
                         IsCompositeGlyph(ref Decode, ref vtCmpGID);
 
                         for (int j = 0; j < vtCmpGID.Count; j++) {
+                            if (vtCmpGID[j] > maxGID)
+                                maxGID = (ushort)vtCmpGID[j];
+
                             if (CheckGid(ref Decode.codemap.lstCodeMap, vtCmpGID[j])) {
                                 if (Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] > Decode.tbLoca.vtLoca[vtCmpGID[j]]){
                                     ulGlyphsLen += Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] - Decode.tbLoca.vtLoca[vtCmpGID[j]];
@@ -1278,9 +1519,10 @@ namespace HYFontCodecCS
                         ulGlyphsLen += Decode.tbLoca.vtLoca[iIndex + 1] - Decode.tbLoca.vtLoca[iIndex];
                     }
                 }
+
             }
 
-            // 分配好子集字形内存
+            // 分配好子集字形内存            
             uint Real = (ulGlyphsLen + 3) / 4 * 4;
             byte[] pOutGlyphs = new byte[Real];
 
@@ -1294,7 +1536,8 @@ namespace HYFontCodecCS
             }
 
             uint iBuffOffset = glyphlenth;
-            for (int i = 1; i < Decode.tbMaxp.numGlyphs; i++) {
+            //for (int i = 1; i < Decode.tbMaxp.numGlyphs; i++) {
+            for (int i = 1; i < maxGID+1; i++) {
                 if (CheckGid(ref Decode.codemap.lstCodeMap, i)){
                     local.vtLoca.Add(iBuffOffset);
                 }
@@ -1532,176 +1775,8 @@ namespace HYFontCodecCS
 
         }   // end of HYRESULT ModifyFontInfo()
 
-        HYRESULT Extrace(HYDecodeC FontDecode, ref HYEncode FontEncode, List<uint> lstUnicode, ref List<byte> lstGlyphData)
+        HYRESULT Extrace(HYDecodeC FontDecode, ref HYEncode FontEncode, List<uint> lstUnicode, ref List<byte> lstGlyphData,ref List<UInt32> lstMssUni)
         {
-            int iEntryIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GLYF_TAG);
-            CTableEntry entry = FontDecode.tbDirectory.vtTableEntry[iEntryIndex];
-            FontDecode.DecodeStream.Seek(entry.offset, SeekOrigin.Begin);           
-
-            List<int> vtExtraceGid = new List<int>();
-            lstGlyphData.Clear();
-            int offset = 0;            
-
-            // miss char  必须存在
-            FontEncode.tbLoca = new CLoca();
-            FontEncode.tbLoca.vtLoca.Add((uint)offset);
-            vtExtraceGid.Add(0);
-
-            for (int i = 0; i < lstUnicode.Count; i++)
-            {
-                int iIndex = FontDecode.FindGryphIndexByUnciode(lstUnicode[i]);
-                if (!CheckGidRepeat(vtExtraceGid, iIndex))
-                {
-                    vtExtraceGid.Add(iIndex);                    
-                }
-            }
-
-            uint GlyphDataLen = FontDecode.tbLoca.vtLoca[1] - FontDecode.tbLoca.vtLoca[0];
-            byte[] btmp = new byte[GlyphDataLen];
-            FontDecode.DecodeStream.Seek(entry.offset+ FontDecode.tbLoca.vtLoca[0], SeekOrigin.Begin);
-            FontDecode.DecodeStream.Read(btmp,0,(int)GlyphDataLen);
-            lstGlyphData.InsertRange(offset, btmp.ToList());
-            offset += (int)GlyphDataLen;
-
-            // 拷贝对应的GlyphData
-            for (int i = 1; i < FontDecode.tbMaxp.numGlyphs; i++)            
-            {
-                // 如果i不在提取Indexlist中，不做任何操作
-                if (!CheckGidRepeat(vtExtraceGid, i))
-                {
-                    FontEncode.tbLoca.vtLoca.Add((uint)offset);
-                }
-                // 如果i在提取Indexlist中，需要把字形数据提取出来
-                else                                
-                {                    
-                    FontEncode.tbLoca.vtLoca.Add((uint)offset);
-                    GlyphDataLen = FontDecode.tbLoca.vtLoca[i + 1] - FontDecode.tbLoca.vtLoca[i];
-
-                    btmp = new byte[GlyphDataLen];
-                    FontDecode.DecodeStream.Seek(entry.offset + FontDecode.tbLoca.vtLoca[i], SeekOrigin.Begin);
-                    FontDecode.DecodeStream.Read(btmp, 0, (int)GlyphDataLen);
-
-                    lstGlyphData.InsertRange(offset, btmp.ToList());
-                    offset += (int)GlyphDataLen;
-                }
-            }
-            FontEncode.tbLoca.vtLoca.Add((uint)offset);
-            FontEncode.tbMaxp = FontDecode.tbMaxp;
-           
-            return HYRESULT.NOERROR;
-
-        }   // end of HYRESULT Extrace()
-
-        HYRESULT Extrace1(HYDecodeC FontDecode, ref HYEncode FontEncode, List<uint> lstUnicode, ref List<byte> lstGlyphData)
-        {            
-            int iEntryIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GLYF_TAG);
-            CTableEntry entry = FontDecode.tbDirectory.vtTableEntry[iEntryIndex];
-            FontDecode.DecodeStream.Seek(entry.offset, SeekOrigin.Begin);
-
-            List<int> vtExtraceGid = new List<int>();
-            List<HMTX_LONGHORMERTRIC>		vtExtraceHMTX = new List<HMTX_LONGHORMERTRIC>();            
-            lstGlyphData.Clear();
-            int offset = 0;
-
-            // miss char  必须存在
-            HMTX_LONGHORMERTRIC tmpHMTXItem;            
-
-            FontEncode.tbLoca = new CLoca();
-            FontEncode.tbLoca.vtLoca.Add((uint)offset);
-            vtExtraceGid.Add(0);
-
-            tmpHMTXItem = FontDecode.tbHmtx.lstLonghormetric[0];
-            vtExtraceHMTX.Add(tmpHMTXItem);           
-
-            // 保存MISSChar的数据
-            uint GlyphDataLen = FontDecode.tbLoca.vtLoca[1] - FontDecode.tbLoca.vtLoca[0];
-            byte[] btmp = new byte[GlyphDataLen];
-            FontDecode.DecodeStream.Seek(entry.offset + FontDecode.tbLoca.vtLoca[0], SeekOrigin.Begin);
-            FontDecode.DecodeStream.Read(btmp, 0, (int)GlyphDataLen);
-            lstGlyphData.InsertRange(offset, btmp.ToList());
-            offset += (int)GlyphDataLen;
-
-            // 提取字形数据
-            List<uint> lstUnicodeTmp = new List<uint>();
-            for (int i = 0; i < lstUnicode.Count; i++)
-            {
-                int iIndex = FontDecode.FindGryphIndexByUnciode(lstUnicode[i]);
-                if (iIndex != -1)
-                {
-                    // 过滤掉字库中不存在的unicode
-                    lstUnicodeTmp.Add(lstUnicode[i]);                    
-                
-                    if (!CheckGidRepeat(vtExtraceGid, iIndex))
-                    {
-                        // 提取HMTX item项
-                        vtExtraceGid.Add(iIndex);
-                        vtExtraceHMTX.Add(FontDecode.tbHmtx.lstLonghormetric[iIndex]);                       
-
-                        // 计算loce和数据长度
-                        FontEncode.tbLoca.vtLoca.Add((uint)offset);
-                        GlyphDataLen = FontDecode.tbLoca.vtLoca[iIndex + 1] - FontDecode.tbLoca.vtLoca[iIndex];
-                        btmp = new byte[GlyphDataLen];
-                        FontDecode.DecodeStream.Seek(entry.offset + FontDecode.tbLoca.vtLoca[iIndex], SeekOrigin.Begin);
-                        FontDecode.DecodeStream.Read(btmp, 0, (int)GlyphDataLen);                      
-
-                        lstGlyphData.InsertRange(offset, btmp.ToList());
-
-                        offset += (int)GlyphDataLen;
-                    }
-                }
-            }
-            FontEncode.tbLoca.vtLoca.Add((uint)offset);
-
-            if (lstUnicode.Count != lstUnicodeTmp.Count)
-            {
-                lstUnicode = lstUnicodeTmp;
-            }
-
-            if (lstUnicode.Count == 0) return HYRESULT.EXTRACT_ZERO; 
-            
-            //HHEA HMTX
-            FontEncode.tbHhea = FontDecode.tbHhea;
-		    int iHMTXNum = vtExtraceHMTX.Count;
-		    if (iHMTXNum>0)
-		    {
-			    FontEncode.tbHhea.numberOfHMetrics = 0;
-			    int				iBaseadvanceWidth = vtExtraceHMTX[--iHMTXNum].advanceWidth;		
-			    while(--iHMTXNum>=0)
-			    {				
-				    if(vtExtraceHMTX[iHMTXNum].advanceWidth == iBaseadvanceWidth)
-					    FontEncode.tbHhea.numberOfHMetrics++;
-				    else 
-					    break;
-			    }
-                FontEncode.tbHhea.numberOfHMetrics = (ushort)(vtExtraceHMTX.Count - FontEncode.tbHhea.numberOfHMetrics);
-			    FontEncode.tbHmtx.lstLonghormetric= vtExtraceHMTX;			
-		    }
-           
-            //CMAP
-            FontEncode.codemap = new HYCodeMap();
-            HYCodeMapItem mapItm = new HYCodeMapItem();
-            mapItm.Unicode = 0xffff;
-            mapItm.GID = 0;
-            FontEncode.codemap.lstCodeMap.Add(mapItm);
-            int stUniNum = lstUnicode.Count;
-            for (int i = 0; i < stUniNum; i++)
-            {
-                mapItm = new HYCodeMapItem();
-                mapItm.Unicode = lstUnicode[i];
-                mapItm.GID = i + 1;
-                FontEncode.codemap.lstCodeMap.Add(mapItm);
-            }
-            FontEncode.codemap.QuickSortbyUnicode();
-            FontEncode.tbMaxp.numGlyphs = (ushort)vtExtraceGid.Count;
-
-            return HYRESULT.NOERROR;
-
-        }   // end of HYRESULT Extrace1()
-
-
-        HYRESULT Extrace2(HYDecodeC FontDecode, ref HYEncode FontEncode, List<uint> lstUnicode, ref List<byte> lstGlyphData,ref List<UInt32> lstMssUni)
-        {
-
             int iEntryIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GLYF_TAG);
             CTableEntry entry = FontDecode.tbDirectory.vtTableEntry[iEntryIndex];
             FontDecode.DecodeStream.Seek(entry.offset, SeekOrigin.Begin);
@@ -1836,7 +1911,7 @@ namespace HYFontCodecCS
 
             return HYRESULT.NOERROR;
 
-        }   // end of HYRESULT Extrace2()
+        }   // end of HYRESULT Extrace()
 
         bool BuildGlyphData(
                             HYDecodeC FontDecode, 

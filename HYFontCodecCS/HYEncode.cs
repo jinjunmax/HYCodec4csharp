@@ -8091,8 +8091,7 @@ namespace HYFontCodecCS
                     FRStrm.Read(array, 0, 4);
                     HYEntry.length = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
-                    //if (HYEntry.tag.Equals(TABLETAG.HEAD_TAG))
-                    if (HYEntry.tag.Equals(0x68656164))
+                    if (HYEntry.tag.Equals(TABLETAG.HEAD_TAG))
                     {
                         FRStrm.Seek(HYEntry.offset + 8, SeekOrigin.Begin);
 

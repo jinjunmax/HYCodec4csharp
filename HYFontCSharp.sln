@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27130.2024
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31129.286
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FontView", "FontView\FontView.csproj", "{AFAB11BA-C4BB-4F56-A2C1-1C51974E45F4}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -49,7 +49,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {264D7D54-FE3A-4D69-85C9-5379F747E0D5}
 		VisualSVNWorkingCopyRoot = .
+		SolutionGuid = {264D7D54-FE3A-4D69-85C9-5379F747E0D5}
 	EndGlobalSection
 EndGlobal
