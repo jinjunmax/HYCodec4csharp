@@ -13,37 +13,32 @@ using HYFontCodecCS;
 
 namespace FontView
 {
-    public partial class Form1 : Form
+    public partial class MainWnd : Form
     {
-        HYDecodeC FontDec;
+        HYDecode FontDec;
         int iCunGlyphInx = 0;
 
-        public Form1()
+        public MainWnd()
         {
             InitializeComponent();
             edt_ThknssX.Text = "50";
             edt_ThknssY.Text = "50";
         }
 
-        ~Form1()
-        {
-           
-        }        
-
         private void button1_Click(object sender, EventArgs e)
         {
             Stream myStream = null;
             OpenFileDialog OFD = new OpenFileDialog();
-            OFD.InitialDirectory = "d:\\" ;
+            OFD.InitialDirectory = "d:\\";
             OFD.Filter = "True Type files (*.ttf)|*.ttf|Open Type files (*.otf)|*.otf|All files (*.*)|*.*";
-            OFD.FilterIndex = 1 ;
-            OFD.RestoreDirectory = true ;
+            OFD.FilterIndex = 1;
+            OFD.RestoreDirectory = true;
 
-            if(OFD.ShowDialog() == DialogResult.OK)
-            {   
+            if (OFD.ShowDialog() == DialogResult.OK)
+            {
                 using (myStream)
                 {
-                    FontDec = new HYDecodeC();
+                    FontDec = new HYDecode();
                     FontDec.FontDecode(OFD.FileName);
                     iCunGlyphInx = 0;
                     CharInfo GlyfItem = FontDec.GlyphChars.CharInfo[iCunGlyphInx];
@@ -54,17 +49,21 @@ namespace FontView
 
         private void PREBTN_Click(object sender, EventArgs e)
         {
+            if (FontDec == null) return;
+
             if (iCunGlyphInx > 0)
             {
                 iCunGlyphInx--;
                 CharInfo GlyfItem = FontDec.GlyphChars.CharInfo[iCunGlyphInx];
-                myPic1.SetGlyphInfo(GlyfItem, FontDec.GlyphChars,FontDec.tbHead, FontDec.tbHhea, FontDec.FntType);
-                
+                myPic1.SetGlyphInfo(GlyfItem, FontDec.GlyphChars, FontDec.tbHead, FontDec.tbHhea, FontDec.FntType);
+
             }
         }   // end of private void PREBTN_Click()
 
         private void Nextbtn_Click(object sender, EventArgs e)
         {
+            if (FontDec == null) return;
+
             iCunGlyphInx++;
             if (iCunGlyphInx < FontDec.tbMaxp.numGlyphs)
             {
@@ -81,9 +80,9 @@ namespace FontView
 
         private void Form1_Load(object sender, EventArgs e)
         {
-           //  myPic = new MyPic();
-            
-           // this.Controls.Add(myPic);
+            //  myPic = new MyPic();
+
+            // this.Controls.Add(myPic);
             myPic1.OnMyClickEvent += PrintPoint;
 
         }
@@ -95,7 +94,7 @@ namespace FontView
 
         private void myPic1_Click(object sender, EventArgs e)
         {
-            
+
         }
 
         private void myPic1_MouseClick(object sender, MouseEventArgs e)
@@ -114,7 +113,7 @@ namespace FontView
             {
                 myPic1.iMouseSel--;
                 myPic1.Invalidate();
-            }            
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -138,7 +137,7 @@ namespace FontView
             if (iCunGlyphInx > -1)
             {
                 CharInfo GlyfItem = FontDec.GlyphChars.CharInfo[iCunGlyphInx];
-                myPic1.SetGlyphInfo(GlyfItem, FontDec.GlyphChars,FontDec.tbHead, FontDec.tbHhea, FontDec.FntType);
+                myPic1.SetGlyphInfo(GlyfItem, FontDec.GlyphChars, FontDec.tbHead, FontDec.tbHhea, FontDec.FntType);
             }
         }
 
@@ -149,30 +148,41 @@ namespace FontView
             if (iCunGlyphInx > -1)
             {
                 CharInfo GlyfItem = FontDec.GlyphChars.CharInfo[iCunGlyphInx];
-                myPic1.SetGlyphInfo(GlyfItem, FontDec.GlyphChars,FontDec.tbHead, FontDec.tbHhea, FontDec.FntType);
+                myPic1.SetGlyphInfo(GlyfItem, FontDec.GlyphChars, FontDec.tbHead, FontDec.tbHhea, FontDec.FntType);
             }
         }
-/*
-        private static int CompareCodeMapItem(HYCodeMapItem A, HYCodeMapItem B)
-        {
-            if (A.GID > B.GID) return 0;
-            if (A.GID == B.GID) return 1;
-            return -1;
-        }
-        */
+        /*
+                private static int CompareCodeMapItem(HYCodeMapItem A, HYCodeMapItem B)
+                {
+                    if (A.GID > B.GID) return 0;
+                    if (A.GID == B.GID) return 1;
+                    return -1;
+                }
+                */
         private void button5_Click(object sender, EventArgs e)
         {
-            
-            HYEncode encode = new HYEncode();            
+            HYEncode encode = new HYEncode();
             if (FontDec.FntType == FONTTYPE.CFF)
             {
-                UInt32 TableFlag = HYEncode.CFF_FLG | HYEncode.OS2_FLG | HYEncode.CMAP_FLG | HYEncode.HEAD_FLG | HYEncode.HHEA_FLG | HYEncode.HMTX_FLG | HYEncode.MAXP_FLG | HYEncode.NAME_FLG | HYEncode.POST_FLG | HYEncode.GASP_FLG | HYEncode.DSIG_FLG| HYEncode.VHEA_FLG | HYEncode.VMTX_FLG;
+                UInt32 TableFlag = HYEncode.CFF_FLG | HYEncode.OS2_FLG | HYEncode.CMAP_FLG | 
+                                    HYEncode.HEAD_FLG | HYEncode.HHEA_FLG | HYEncode.HMTX_FLG |
+                                    HYEncode.MAXP_FLG | HYEncode.NAME_FLG | HYEncode.POST_FLG | 
+                                    HYEncode.GASP_FLG | HYEncode.DSIG_FLG | HYEncode.VHEA_FLG | 
+                                    HYEncode.VMTX_FLG;
+
                 CharsInfo chars = FontDec.GlyphChars;
                 encode.EncodeFont("d:\\testCSharp.otf", "D:\\WorkZone\\Font\\CSharp\\HYFontCSharp\\HYFontCodecCS\\bin\\Profile.xml", TableFlag, ref chars);
             }
             if (FontDec.FntType == FONTTYPE.TTF)
             {
-                UInt32 TableFlag = HYEncode.GLYF_FLG | HYEncode.OS2_FLG | HYEncode.CMAP_FLG | HYEncode.HEAD_FLG | HYEncode.HHEA_FLG | HYEncode.HMTX_FLG | HYEncode.LOCA_FLG | HYEncode.MAXP_FLG | HYEncode.NAME_FLG | HYEncode.POST_FLG | HYEncode.PREP_FLG | HYEncode.DSIG_FLG | HYEncode.GASP_FLG| HYEncode.VHEA_FLG | HYEncode.VMTX_FLG;
+                UInt32 TableFlag = HYEncode.GLYF_FLG | HYEncode.OS2_FLG | 
+                    HYEncode.CMAP_FLG | HYEncode.HEAD_FLG |
+                    HYEncode.HHEA_FLG | HYEncode.HMTX_FLG |
+                    HYEncode.LOCA_FLG | HYEncode.MAXP_FLG | 
+                    HYEncode.NAME_FLG | HYEncode.POST_FLG | 
+                    HYEncode.PREP_FLG | HYEncode.DSIG_FLG | 
+                    HYEncode.GASP_FLG | HYEncode.VHEA_FLG |
+                    HYEncode.VMTX_FLG;
 
                 CharsInfo chars = FontDec.GlyphChars;
                 encode.EncodeFont("d:\\testCSharp.ttf", "D:\\WorkZone\\Font\\HYFontStudio\\bin\\data\\Profile.xml", TableFlag, ref chars);
@@ -189,23 +199,23 @@ namespace FontView
         }
 
         private void SubSetFont_Click(object sender, EventArgs e)
-        {   
+        {
             string strFontFile, strTxtFile;
             OpenFileDialog FntfleDlg = new OpenFileDialog();
             FntfleDlg.Filter = "truetype files (*.ttf)|*.ttf|All files (*.*)|*.*";
             if (FntfleDlg.ShowDialog() == DialogResult.OK)
             {
-                strFontFile = FntfleDlg.FileName;                
+                strFontFile = FntfleDlg.FileName;
                 OpenFileDialog TxtfleDlg = new OpenFileDialog();
                 TxtfleDlg.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
                 if (TxtfleDlg.ShowDialog() == DialogResult.OK)
                 {
                     strTxtFile = TxtfleDlg.FileName;
                     List<UInt32> lstUnicode = new List<UInt32>();
-                    CBase.ReadCharFileToUnicode(strTxtFile, ref lstUnicode);                    
+                    CBase.ReadCharFileToUnicode(strTxtFile, ref lstUnicode);
 
                     try
-                    {                        
+                    {
                         SaveFileDialog SubSetDlg = new SaveFileDialog();
                         SubSetDlg.Filter = "truetype files (*.ttf)|*.ttf|All files (*.*)|*.*";
                         if (SubSetDlg.ShowDialog() == DialogResult.OK)
@@ -215,10 +225,10 @@ namespace FontView
                             List<UInt32> lstMssUni = new List<UInt32>();
 
                             DateTime tm1 = DateTime.Now;
-                            for (int i=99; i<100; i++)
-                            {  
-                                hr = HYFontAPI.ExtractFont(strFontFile, strSubsetName, ref lstUnicode, ref lstMssUni);
-                            }
+                            //for (int i = 99; i < 100; i++)
+                            //{
+                            hr = HYFontAPI.ExtractFont(strFontFile, strSubsetName, ref lstUnicode, ref lstMssUni);
+                            //}
                             DateTime tm2 = DateTime.Now;
                             double dbspan = (tm2 - tm1).TotalSeconds;
 
@@ -230,15 +240,15 @@ namespace FontView
                             }
                             else
                             {
-                                MessageBox.Show(hr.ToString());                                
+                                MessageBox.Show(hr.ToString());
                             }
                         }
                     }
                     catch (Exception ext)
                     {
                         MessageBox.Show(ext.ToString());
-                    }                  
-                }               
+                    }
+                }
             }
         }   // end of private void SubSetFont_Click()
 
@@ -256,7 +266,7 @@ namespace FontView
             {
                 strFontFile = FntfleDlg.FileName;
                 try
-                {                    
+                {
                     SaveFileDialog EotDlg = new SaveFileDialog();
                     EotDlg.Filter = "Eot files (*.eot)|*.eot|All files (*.*)|*.*";
                     if (EotDlg.ShowDialog() == DialogResult.OK)
@@ -329,7 +339,7 @@ namespace FontView
             OpenFileDialog FntfleDlg = new OpenFileDialog();
             FntfleDlg.Filter = "The Font Collection File (*.ttc)|*.ttc";
             if (FntfleDlg.ShowDialog() == DialogResult.OK)
-            {                
+            {
                 try
                 {
                     strFontFile = FntfleDlg.FileName;
@@ -343,7 +353,7 @@ namespace FontView
                     else
                     {
                         MessageBox.Show(hr.ToString());
-                    }                   
+                    }
                 }
                 catch (Exception ext)
                 {
@@ -355,7 +365,7 @@ namespace FontView
 
         // fonts to ttc 
         private void button9_Click(object sender, EventArgs e)
-        {            
+        {
             OpenFileDialog FntfleDlg = new OpenFileDialog();
             FntfleDlg.Filter = "truetype files (*.ttf)|*.ttf|opentype files (*.otf)|*.otf";
 
@@ -376,7 +386,7 @@ namespace FontView
 
                     HYRESULT hr = HYFontAPI.FontToTTCForAFDK_C(lstFontNames);
                     //HYRESULT hr = HYFontAPI.FontToTTCForAFDK_P(lstFontNames);
-                    
+
                     if (hr == HYRESULT.NOERROR)
                     {
                         MessageBox.Show("ok");
@@ -384,7 +394,7 @@ namespace FontView
                     else
                     {
                         MessageBox.Show(hr.ToString());
-                    }        
+                    }
 
                 }
                 catch (Exception ext)
@@ -444,7 +454,8 @@ namespace FontView
             byte[] inChar = System.Text.Encoding.ASCII.GetBytes(StringInf);
             int iLength = inChar.Length;
             IntPtr pRet = SetOutlineThickness(inChar, ref iLength, iXStrength, iYStrength);
-            if(pRet != null) {
+            if (pRet != null)
+            {
                 string strRet = Marshal.PtrToStringAnsi(pRet);
 
                 CharInfo charInf = new CharInfo();
@@ -466,10 +477,10 @@ namespace FontView
             string strendPts = "";
 
             int iPtIndx = 0;
-            
-            for (int i=0; i< GlyfItem.ContourCount;i++)
+
+            for (int i = 0; i < GlyfItem.ContourCount; i++)
             {
-                for (int j=0; j<GlyfItem.ContourInfo[i].PointCount; j++)
+                for (int j = 0; j < GlyfItem.ContourInfo[i].PointCount; j++)
                 {
                     strPt += GlyfItem.ContourInfo[i].PtInfo[j].X.ToString();
                     strPt += ".";
@@ -499,9 +510,8 @@ namespace FontView
 
         }   // end of private void CharInfoToStringInfo()
 
-
         private void StringInfoToChars(ref CharInfo GlyfItem, string StringInf)
-        {            
+        {
             string[] strSZ = StringInf.Split(';');
             if (strSZ.Length < 3) return;
 
@@ -515,9 +525,9 @@ namespace FontView
             int iContouIndx = 0;
 
             ContourInfo cnturinf = new ContourInfo();
-            for  (int i=0; i< szPoints.Length; i++)
+            for (int i = 0; i < szPoints.Length; i++)
             {
-                string[] szpt = szPoints[i].Split('.');              
+                string[] szpt = szPoints[i].Split('.');
                 PtInfo pt = new PtInfo();
                 pt.X = int.Parse(szpt[0]);
                 pt.Y = int.Parse(szpt[1]);
@@ -528,15 +538,15 @@ namespace FontView
                 {
                     if (i == int.Parse(szEndpts[iContouIndx]))
                     {
-                        if (iContouIndx==0)
+                        if (iContouIndx == 0)
                         {
                             cnturinf.PointCount = i + 1;
                         }
                         else
                         {
-                            cnturinf.PointCount = int.Parse(szEndpts[iContouIndx])- int.Parse(szEndpts[iContouIndx-1]);
+                            cnturinf.PointCount = int.Parse(szEndpts[iContouIndx]) - int.Parse(szEndpts[iContouIndx - 1]);
                         }
-                        
+
                         GlyfItem.ContourInfo.Add(cnturinf);
                         cnturinf = new ContourInfo();
                         iContouIndx++;
@@ -548,7 +558,22 @@ namespace FontView
 
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
-           ReleaseOutlineBuffer();
-        }
+            ReleaseOutlineBuffer();
+
+        }   // end of private void Form1_FormClosed()
+
+        private void FontInf_Click(object sender, EventArgs e)
+        {
+            FntInfWnd wndFntInf = new FntInfWnd(FontDec);
+            wndFntInf.Show();
+
+        }   // end of private void FontInf_Click()
+
+        private void btnChngeCode_Click(object sender, EventArgs e)
+        {
+            ChangCodeWnd wndChang = new ChangCodeWnd();
+            wndChang.Show();
+
+        }   //end of private void btnChngeCode_Click()
     }
 }

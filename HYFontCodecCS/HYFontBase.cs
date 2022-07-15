@@ -11,7 +11,7 @@ namespace HYFontCodecCS
     public class HYFontBase : HYBase
     {
         protected FONTTYPE FontType;
-        public FileStream FRStrm;
+        public FileStream FileStrm;
         protected CTableDirectory TableDirectorty;        
         protected CLoca Loca;        
         protected CMaxp Maxp;
@@ -32,6 +32,29 @@ namespace HYFontCodecCS
         protected CGasp Gasp;
 
         public HYCodeMap codemap;
+
+        public HYFontBase()
+        {
+            TableDirectorty = new CTableDirectory();
+            Loca = new CLoca();
+            Maxp    = new CMaxp();
+            Head = new CHead();
+            Name = new CName();
+            Cmap = new CCmap();
+            Hmtx = new CHmtx();
+            Hhea = new CHhea();
+            Gsub = new CGSUB();
+            OS2 = new COS2();
+            Post = new CPost();
+            Vhea = new CVhea();
+            Vmtx = new CVmtx();
+            CFFInfo = new CCFFInfo();
+            Chars = new CharsInfo();
+            Colr = new CHYCOLR();
+            DSIG = new CDSIG();
+            Gasp = new CGasp();
+        }
+
         public FONTTYPE FntType
         {
             get { return FontType; }

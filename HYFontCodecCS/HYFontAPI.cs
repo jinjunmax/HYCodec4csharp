@@ -50,7 +50,7 @@ namespace HYFontCodecCS
                 FileInfo fileInf = new FileInfo(FontName);
                 byte[] fntData = new byte[fileInf.Length];
 
-                HYDecodeC FontDecode = new HYDecodeC();
+                HYDecode FontDecode = new HYDecode();
                 ret = FontDecode.FontOpen(FontName);
                 if (ret != HYRESULT.NOERROR) return ret;
 

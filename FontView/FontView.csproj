@@ -56,6 +56,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <PlatformTarget>x86</PlatformTarget>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NoWarn>CS0219,CS0168</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="FontParserEntity">
@@ -84,17 +85,23 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Form1.cs">
+    <Compile Include="ChangCodeWnd.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form1.Designer.cs">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <Compile Include="ChangCodeWnd.Designer.cs">
+      <DependentUpon>ChangCodeWnd.cs</DependentUpon>
     </Compile>
-    <Compile Include="Form2.cs">
+    <Compile Include="MainWnd.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Form2.Designer.cs">
-      <DependentUpon>Form2.cs</DependentUpon>
+    <Compile Include="MainWnd.Designer.cs">
+      <DependentUpon>MainWnd.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FntInfWnd.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FntInfWnd.Designer.cs">
+      <DependentUpon>FntInfWnd.cs</DependentUpon>
     </Compile>
     <Compile Include="MyPic.cs">
       <SubType>Component</SubType>
@@ -104,8 +111,14 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="Form1.resx">
-      <DependentUpon>Form1.cs</DependentUpon>
+    <EmbeddedResource Include="ChangCodeWnd.resx">
+      <DependentUpon>ChangCodeWnd.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FntInfWnd.resx">
+      <DependentUpon>FntInfWnd.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainWnd.resx">
+      <DependentUpon>MainWnd.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

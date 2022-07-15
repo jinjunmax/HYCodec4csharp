@@ -11,18 +11,19 @@ using FontParserEntity;
 namespace HYFontCodecCS
 {
 
-    public class HYDecodeC : HYFontBase
+    public class HYDecode : HYFontBase
     {
         public FileStream DecodeStream
         {            
-            get { return FRStrm; }
+            get { return FileStrm; }
         }        
 
         public HYRESULT FontOpen(string strFileName)
         {
             try
             {
-                FRStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read, FileShare.Read);               
+                FileStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                DecodeTableDirectory();
             }
             catch
             {
@@ -35,9 +36,9 @@ namespace HYFontCodecCS
 
         public HYRESULT FontClose()
         {
-            if (FRStrm != null)
+            if (FileStrm != null)
             {
-                FRStrm.Close();            
+                FileStrm.Close();            
             }
 
             return HYRESULT.NOERROR;
@@ -49,7 +50,7 @@ namespace HYFontCodecCS
         {
             try
             {
-                FRStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                FileStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
             catch
             {
@@ -59,21 +60,41 @@ namespace HYFontCodecCS
             HYRESULT rtResult;
             // 获取字典目录
             DecodeTableDirectory();
-
             rtResult = DecodeMaxp();
             if (rtResult != HYRESULT.NOERROR) return rtResult;
             // 解析Head表
             rtResult = DecodeHead();
-            if (rtResult != HYRESULT.NOERROR) return rtResult;            
+            if (rtResult != HYRESULT.NOERROR) return rtResult;
+            FontClose();
 
             return HYRESULT.NOERROR;
-        }
 
+        }   //end of public HYRESULT GetTable()
+
+        public HYRESULT GetTableData(UInt32 tag, ref CTableEntry tableData)
+        {
+            if(FileStrm !=null)
+            {
+
+                int iTbInx = TableDirectorty.FindTableEntry(tag);
+                if (iTbInx !=-1)
+                {
+                    CTableEntry tbEntry = TableDirectorty.vtTableEntry[iTbInx];
+                    FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+
+                    tableData.aryTableData = new byte[tbEntry.length];
+                    FileStrm.Read(tableData.aryTableData,0,(int)tbEntry.length);
+                }
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT GetTableData()
         public HYRESULT FontDecode(string strFileName)
         {
             try
             {
-                FRStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read,FileShare.Read);
+                FileStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read,FileShare.Read);
             }
             catch
             {
@@ -131,9 +152,9 @@ namespace HYFontCodecCS
                 DecodeCOLR();
             }
              
-            if (FRStrm != null)
+            if (FileStrm != null)
             {
-                FRStrm.Close();
+                FileStrm.Close();
             }
 
             return HYRESULT.NOERROR;
@@ -144,7 +165,7 @@ namespace HYFontCodecCS
         {
             try
             {
-                FRStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
+                FileStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
             }
             catch
             {
@@ -193,12 +214,13 @@ namespace HYFontCodecCS
             rtResult = DecodeHmtx1(lstUni);
             if (rtResult != HYRESULT.NOERROR) return rtResult;
 
-            if (FRStrm != null)
+            if (FileStrm != null)
             {
-                FRStrm.Close();
+                FileStrm.Close();
             }
             return HYRESULT.NOERROR;
-        }
+
+        }   // end of public HYRESULT FontDecode1()
 
         public HYRESULT DecodeTableDirectory()
 	    {            
@@ -206,9 +228,9 @@ namespace HYFontCodecCS
             TableDirectorty = new CTableDirectory();
 
 			// sfnt version
-            FRStrm.Read(array,0,2);
+            FileStrm.Read(array,0,2);
             TableDirectorty.version.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
-            FRStrm.Read(array,0,2);
+            FileStrm.Read(array,0,2);
 			TableDirectorty.version.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
 			if (TableDirectorty.version.value==0x4f54&&TableDirectorty.version.fract==0x544f)
 			{
@@ -221,32 +243,32 @@ namespace HYFontCodecCS
 			}
             
             //numTables
-            FRStrm.Read(array,0,2);
+            FileStrm.Read(array,0,2);
             TableDirectorty.numTables = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
 	        //searchRange
-            FRStrm.Read(array,0,2);
+            FileStrm.Read(array,0,2);
             TableDirectorty.searchRange = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));			
 			//entrySelector
-            FRStrm.Read(array,0,2);
+            FileStrm.Read(array,0,2);
             TableDirectorty.entrySelector = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
 			//rangeShift
-            FRStrm.Read(array,0,2);
+            FileStrm.Read(array,0,2);
             TableDirectorty.rangeShift = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
 			
             for (UInt16 i=0; i<TableDirectorty.numTables; i++)
 			{
                 CTableEntry HYEntry = new CTableEntry();
 				//tag		
-                FRStrm.Read(array,0,4);
+                FileStrm.Read(array,0,4);
                 HYEntry.tag = hy_cdr_int32_to(BitConverter.ToUInt32(array,0));
 				// checkSum
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 HYEntry.checkSum = hy_cdr_int32_to(BitConverter.ToUInt32(array,0));
 				//offset
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 HYEntry.offset = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 				//length
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 HYEntry.length = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
                 TableDirectorty.vtTableEntry.Add(HYEntry);
@@ -265,51 +287,51 @@ namespace HYFontCodecCS
             if (iEntryIndex == -1) return HYRESULT.MAXP_DECODE;
 
             CTableEntry  tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             if (FontType == FONTTYPE.TTF)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.version.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.version.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.numGlyphs = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxPoints = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxContours = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxCompositePoints = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxCompositeContours = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxZones = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxTwilightPoints = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxStorage = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxFunctionDefs = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxInstructionDefs = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxStackElements = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxSizeOfInstructions = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxComponentElements = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.maxComponentDepth = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));               
             }
 
             if (FontType == FONTTYPE.CFF)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.version.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.version.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Maxp.numGlyphs = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             }
 
@@ -324,64 +346,64 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.HEAD_TAG);
             if (iEntryIndex == -1) return HYRESULT.HEAD_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             //Table version number
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.version.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.version.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //fontRevision
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.fontRevision.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.fontRevision.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //checkSumAdjustment
-            FRStrm.Read(array, 0, 4);           
+            FileStrm.Read(array, 0, 4);           
             Head.checkSumAdjustment = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));         
             // magicNumber
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Head.magicNumber = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
             //flags
             array = new byte[4];
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.flags = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //unitsPerEm
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.unitsPerEm = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //created
             Head.created = new byte[8];
-            FRStrm.Read(Head.created, 0, 8);
+            FileStrm.Read(Head.created, 0, 8);
             //modified
             Head.modified = new byte[8];
-            FRStrm.Read(Head.modified, 0, 8);
+            FileStrm.Read(Head.modified, 0, 8);
 
             //xMin
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.xMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // yMin
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.yMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //xMax
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.xMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // yMax
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.yMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // macStyle
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.macStyle = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //lowestRecPPEM
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.lowestRecPPEM = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //fontDirectionHint
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.fontDirectionHint = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //indexToLocFormat
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.indexToLocFormat = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //glyphDataFormat
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Head.glyphDataFormat = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             string strRect;
@@ -407,23 +429,23 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.CMAP_TAG);
             if (iEntryIndex == -1) return HYRESULT.CMAP_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
-            long TableStartPt = FRStrm.Position;
+            long TableStartPt = FileStrm.Position;
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Cmap.version = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Cmap.numSubTable = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             for (UInt16 i = 0; i < Cmap.numSubTable; i++)
             {
                 CMAP_TABLE_ENTRY tbMAPEntry = new CMAP_TABLE_ENTRY();
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 tbMAPEntry.plat_ID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 tbMAPEntry.plat_encod_ID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 tbMAPEntry.offset = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
                 Cmap.vtCamp_tb_entry.Add(tbMAPEntry);
             }
@@ -431,9 +453,9 @@ namespace HYFontCodecCS
             for (UInt16 i = 0; i < Cmap.numSubTable; i++)
             {
                 CMAP_TABLE_ENTRY tbMAPEntry = Cmap.vtCamp_tb_entry[i];
-                FRStrm.Seek(TableStartPt + tbMAPEntry.offset, SeekOrigin.Begin);
+                FileStrm.Seek(TableStartPt + tbMAPEntry.offset, SeekOrigin.Begin);
 
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 tbMAPEntry.format = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
                 switch (tbMAPEntry.format)
@@ -482,136 +504,136 @@ namespace HYFontCodecCS
             if (iEntryIndex == -1) return HYRESULT.OS2_DECODE;
 
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             //Table version number
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.version = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // Average weighted 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.xAvgCharWidth= (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // Indicates the visual weight (degree of blackness or thickness of strokes) of the characters in the font
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.usWeightClass = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // usWidthClass
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.usWidthClass = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // Indicates font embedding licensing rights for the font. Embeddable fonts may be stored in a document
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.fsType = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // Subscript horizontal font size.            
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySubscriptXSize = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // Subscript vertical font size..
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySubscriptYSize = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Subscript x offset
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySubscriptXOffset = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Subscript y offset
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySubscriptYOffset = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Subscript y offset
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySuperscriptXSize = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Superscript vertical font size
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySuperscriptYSize = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Superscript x offset
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySuperscriptXOffset = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Superscript y offset
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.ySuperscriptYOffset = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Strikeout size
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.yStrikeoutSize = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Strikeout position.
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.yStrikeoutPosition = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //Font-family class and subclass.  Also see section 3.4
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.sFamilyClass = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             //PANOSE classification number		
-            OS2.panose.FamilyType = (byte)FRStrm.ReadByte();
-            OS2.panose.SerifStyle = (byte)FRStrm.ReadByte();
-            OS2.panose.Weight = (byte)FRStrm.ReadByte();
-            OS2.panose.Proportion = (byte)FRStrm.ReadByte();
-            OS2.panose.Contrast = (byte)FRStrm.ReadByte();
-            OS2.panose.StrokeVariation = (byte)FRStrm.ReadByte();
-            OS2.panose.ArmStyle = (byte)FRStrm.ReadByte();
-            OS2.panose.Letterform = (byte)FRStrm.ReadByte();
-            OS2.panose.Midline = (byte)FRStrm.ReadByte();
-            OS2.panose.XHeight = (byte)FRStrm.ReadByte();
+            OS2.panose.FamilyType = (byte)FileStrm.ReadByte();
+            OS2.panose.SerifStyle = (byte)FileStrm.ReadByte();
+            OS2.panose.Weight = (byte)FileStrm.ReadByte();
+            OS2.panose.Proportion = (byte)FileStrm.ReadByte();
+            OS2.panose.Contrast = (byte)FileStrm.ReadByte();
+            OS2.panose.StrokeVariation = (byte)FileStrm.ReadByte();
+            OS2.panose.ArmStyle = (byte)FileStrm.ReadByte();
+            OS2.panose.Letterform = (byte)FileStrm.ReadByte();
+            OS2.panose.Midline = (byte)FileStrm.ReadByte();
+            OS2.panose.XHeight = (byte)FileStrm.ReadByte();
             // ulUnicodeRange1
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             OS2.ulUnicodeRange1 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
             // ulUnicodeRange2
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             OS2.ulUnicodeRange2 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
             // ulUnicodeRange3
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             OS2.ulUnicodeRange3 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
             // ulUnicodeRange4
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             OS2.ulUnicodeRange4 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
             // Font Vendor Identification
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             OS2.vtachVendID = array.ToList<byte>();
             //.Add(array[0]);
             //OS2.vtachVendID.Add(array[1]);
             //OS2.vtachVendID.Add(array[2]);
             //OS2.vtachVendID.Add(array[3]);
             // Font selection flags
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.fsSelection = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // The minimum Unicode index (character code) in this font
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.usFirstCharIndex = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // The maximum Unicode index (character code) in this font,
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.usLastCharIndex = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));            
             // The typographic ascender for this font. 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.sTypoAscender = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // The typographic descender for this font. 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.sTypoDescender = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // The typographic line gap for this font
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.sTypoLineGap = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // The ascender metric for Windows
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.usWinAscent = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             // The descender metric for Windows
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             OS2.usWinDescent = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             if (OS2.version > 0)
             {
                 // ulCodePageRange1
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 OS2.ulCodePageRange1 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
                 // ulCodePageRange2
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 OS2.ulCodePageRange2 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
             }
 
             if (OS2.version > 1)
             {
                 // xHeight
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 OS2.sxHeight = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)); 
                 // sCapHeight
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 OS2.sCapHeight = (short)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 // usDefaultChar
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 OS2.usDefaultChar = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 // usBreakChar
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 OS2.usBreakChar = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 // usBreakChar
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 OS2.usMaxContext = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             }
 
@@ -626,17 +648,17 @@ namespace HYFontCodecCS
 
 			// length
             byte[] array = new byte[4];
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
 			CEF0.length = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
 			// language
-            FRStrm.Read(array, 0, 2);			
+            FileStrm.Read(array, 0, 2);			
 			CEF0.language =  hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));		
 
 			// glyphIdArray			
 			for (int i=0; i<256; i++)
 			{				
-                FRStrm.Read(array, 0, 1);
+                FileStrm.Read(array, 0, 1);
                 CEF0.vtGlyphId.Add(array[0]);			
 			}
 
@@ -658,57 +680,57 @@ namespace HYFontCodecCS
             CMAP_ENCODE_FORMAT_4  CEF4 = entry.Format4;
             CEF4.format = 4;
 
-            long ulStart = FRStrm.Position - 2;
-            FRStrm.Read(array, 0, 2);
+            long ulStart = FileStrm.Position - 2;
+            FileStrm.Read(array, 0, 2);
             CEF4.length = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             CEF4.language = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             CEF4.segCountX2 = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             CEF4.searchRange = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             CEF4.entrySelector = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             CEF4.rangeShift = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
             
             for (UInt16 i = 0; i<CEF4.segCountX2 >> 1; i++)
 		    {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 CEF4.vtEndCount.Add(hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)));
 		    }
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             CEF4.reservedPad = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             for (UInt16 i = 0; i < CEF4.segCountX2 >> 1; i++)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 CEF4.vtstartCount.Add(hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)));
             }
 
             for (UInt16 i = 0; i < CEF4.segCountX2 >> 1; i++)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 CEF4.vtidDelta.Add((Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)));
             }
 
             for (UInt16 i = 0; i < CEF4.segCountX2 >> 1; i++)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 CEF4.vtidRangeOffset.Add(hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)));
             }
 
-            long ulCurrent = FRStrm.Position;
+            long ulCurrent = FileStrm.Position;
             long ipglyphIdArrayLen = (CEF4.length - (UInt16)(ulCurrent - ulStart))/2;	
 		    for (long i=0; i<ipglyphIdArrayLen; i++)
 		    {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 CEF4.vtglyphIdArray.Add(hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)));			  
 		    }
 
@@ -744,28 +766,28 @@ namespace HYFontCodecCS
             CMAP_ENCODE_FORMAT_12 CEF12 = entry.Format12;
             CEF12.format = 12;
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
 
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             CEF12.length = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             CEF12.language = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             CEF12.nGroups = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
             for (UInt32 i=0; i<CEF12.nGroups; i++)
 		    {
 			    CMAP_ENCODE_FORMAT_12_GROUP  group = new CMAP_ENCODE_FORMAT_12_GROUP();
 
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 group.startCharCode = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 group.endCharCode = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
-                FRStrm.Read(array, 0, 4);
+                FileStrm.Read(array, 0, 4);
                 group.startGlyphID = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
 			    CEF12.vtGroup.Add(group);
@@ -796,38 +818,38 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.NAME_TAG);
             if (iEntryIndex == -1) return HYRESULT.NAME_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
-            long TbStart = FRStrm.Position;
+            long TbStart = FileStrm.Position;
             
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Name.Format = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Name.count = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Name.offset = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             for (UInt16 i = 0; i < Name.count; i++)
             {
                 NAMERECORD NameRecord = new NAMERECORD();
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 NameRecord.platformID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 NameRecord.encodingID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 NameRecord.languageID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 NameRecord.nameID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 NameRecord.length = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 NameRecord.offset = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 
-                long CurrentPos = FRStrm.Position;
-                FRStrm.Seek(TbStart + Name.offset + NameRecord.offset,SeekOrigin.Begin);
+                long CurrentPos = FileStrm.Position;
+                FileStrm.Seek(TbStart + Name.offset + NameRecord.offset,SeekOrigin.Begin);
 
                 Byte[] Content = new Byte[NameRecord.length];
-                FRStrm.Read(Content, 0, NameRecord.length);
+                FileStrm.Read(Content, 0, NameRecord.length);
 
                 if (
                     (NameRecord.platformID == 3 && NameRecord.encodingID == 1) ||
@@ -848,34 +870,34 @@ namespace HYFontCodecCS
                 }
 
                 Name.vtNameRecord.Add(NameRecord);
-                FRStrm.Seek(CurrentPos, SeekOrigin.Begin);         
+                FileStrm.Seek(CurrentPos, SeekOrigin.Begin);         
             }
 
             if (Name.Format == 1)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 UInt16 langTagCount = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
                 for (UInt16 i = 0; i < langTagCount; i++)
                 {
                     LANGTAGRECORD langTagRecord = new LANGTAGRECORD();
 
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     langTagRecord.length = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     langTagRecord.offset = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     langTagRecord.offset = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-                    long CurrentPos = FRStrm.Position;
-                    FRStrm.Seek(TbStart + Name.offset + langTagRecord.offset,SeekOrigin.Begin);
+                    long CurrentPos = FileStrm.Position;
+                    FileStrm.Seek(TbStart + Name.offset + langTagRecord.offset,SeekOrigin.Begin);
 
                     Byte[] langTagContent = new Byte[langTagRecord.length];
-                    FRStrm.Read(langTagContent, 0, langTagRecord.length);
+                    FileStrm.Read(langTagContent, 0, langTagRecord.length);
 
                     Name.vtLangTargeRecord.Add(langTagRecord);
 
-                    FRStrm.Seek(CurrentPos, SeekOrigin.Begin);                    
+                    FileStrm.Seek(CurrentPos, SeekOrigin.Begin);                    
                 }
             }
 
@@ -890,7 +912,7 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.LOCA_TAG);
             if (iEntryIndex == -1) return HYRESULT.LOCA_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             Int16 sIndexToLocFormat = Head.indexToLocFormat;
 			UInt32 usArraySize = Maxp.numGlyphs;
@@ -901,7 +923,7 @@ namespace HYFontCodecCS
                 UInt32 uTmp = 0;
 				for (UInt32 i = 0; i<usArraySize; i++)
 				{				
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     uTmp = (UInt32)(hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)) * 2);
                     Loca.vtLoca.Add(uTmp);
 				}				
@@ -911,7 +933,7 @@ namespace HYFontCodecCS
             {
                 for (UInt32 i = 0; i<usArraySize; i++)
 				{
-                    FRStrm.Read(array, 0, 4);
+                    FileStrm.Read(array, 0, 4);
                     Loca.vtLoca.Add(hy_cdr_int32_to(BitConverter.ToUInt32(array, 0)));
 				}
             }
@@ -927,9 +949,9 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.GLYF_TAG);
             if (iEntryIndex == -1) return HYRESULT.GLYF_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
-            long TableStartPoint = FRStrm.Position;           
+            long TableStartPoint = FileStrm.Position;           
             for (UInt16 i = 0; i < Maxp.numGlyphs; i++)
             {                
                 CharInfo  charinf = new CharInfo();
@@ -949,18 +971,18 @@ namespace HYFontCodecCS
                 
                 if (Loca.vtLoca[i] < Loca.vtLoca[i + 1])
                 {
-                    FRStrm.Seek(TableStartPoint + Loca.vtLoca[i], SeekOrigin.Begin);
+                    FileStrm.Seek(TableStartPoint + Loca.vtLoca[i], SeekOrigin.Begin);
 
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     charinf.ContourCount = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-                    FRStrm.Read(array, 0, 2);                    
+                    FileStrm.Read(array, 0, 2);                    
                     Int16 xMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     Int16 yMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     Int16 xMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     Int16 yMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
                     charinf.Section = xMin.ToString() + ",";
@@ -999,9 +1021,9 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.GLYF_TAG);
             if (iEntryIndex == -1) return HYRESULT.GLYF_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
-            long TableStartPoint = FRStrm.Position;
+            long TableStartPoint = FileStrm.Position;
             for (int i = 0; i < lstuni.Count; i++)
             {
                 int iIndex = FindGryphIndexByUnciode(lstuni[i]);
@@ -1014,18 +1036,18 @@ namespace HYFontCodecCS
 
                     if (Loca.vtLoca[iIndex] < Loca.vtLoca[iIndex + 1])
                     {
-                        FRStrm.Seek(TableStartPoint + Loca.vtLoca[iIndex], SeekOrigin.Begin);
+                        FileStrm.Seek(TableStartPoint + Loca.vtLoca[iIndex], SeekOrigin.Begin);
 
-                        FRStrm.Read(array, 0, 2);
+                        FileStrm.Read(array, 0, 2);
                         charinf.ContourCount = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-                        FRStrm.Read(array, 0, 2);
+                        FileStrm.Read(array, 0, 2);
                         Int16 xMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                        FRStrm.Read(array, 0, 2);
+                        FileStrm.Read(array, 0, 2);
                         Int16 yMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                        FRStrm.Read(array, 0, 2);
+                        FileStrm.Read(array, 0, 2);
                         Int16 xMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                        FRStrm.Read(array, 0, 2);
+                        FileStrm.Read(array, 0, 2);
                         Int16 yMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
                         charinf.Section = xMin.ToString() + ",";
@@ -1066,47 +1088,47 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.HHEA_TAG);
             if (iEntryIndex == -1) return HYRESULT.HHEA_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             // version 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
 			Hhea.version.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
 			Hhea.version.fract= hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 			
             // Typographic ascent
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.Ascender = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.Descender = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
 			Hhea.LineGap = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.advanceWidthMax = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.minLeftSideBearing  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.minRightSideBearing  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.xMaxExtent  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.caretSlopeRise  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.caretSlopeRun  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.caretOffset  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.reserved1  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.reserved2  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.reserved3  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.reserved4  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.metricDataFormat  = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Hhea.numberOfHMetrics  = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
         
             return HYRESULT.NOERROR;
@@ -1120,16 +1142,16 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.HMTX_TAG);
             if (iEntryIndex == -1) return HYRESULT.HHEA_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
             
             for (UInt16 i = 0; i < Hhea.numberOfHMetrics; i++)
             {
                 HMTX_LONGHORMERTRIC Longhormetric = new HMTX_LONGHORMERTRIC();
 
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Longhormetric.advanceWidth = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Longhormetric.lsb = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 Hmtx.lstLonghormetric.Add(Longhormetric);
             }
@@ -1139,7 +1161,7 @@ namespace HYFontCodecCS
             for (int i = 0; i < LeftSideBearingNum; i++)
             {
                 HMTX_LONGHORMERTRIC Longhormetric = new HMTX_LONGHORMERTRIC();
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
 
                 Longhormetric.lsb = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 Longhormetric.advanceWidth = uTmp;
@@ -1169,24 +1191,25 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.HMTX_TAG);
             if (iEntryIndex == -1) return HYRESULT.HHEA_DECODE;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             int iCharIndex = 0;
 			for (UInt16 i=0; i<Hhea.numberOfHMetrics; i++)
 			{
 				HMTX_LONGHORMERTRIC  Longhormetric = new HMTX_LONGHORMERTRIC();
 
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
 				Longhormetric.advanceWidth = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-				FRStrm.Read(array, 0, 2);
+				FileStrm.Read(array, 0, 2);
 				Longhormetric.lsb = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
 				Hmtx.lstLonghormetric.Add(Longhormetric);
 
                 if (Chars != null)
                 {
-                    Chars.CharInfo[iCharIndex++].AdWidth = Longhormetric.advanceWidth;
+                    if (Chars.CharInfo.Count>0)
+                        Chars.CharInfo[iCharIndex++].AdWidth = Longhormetric.advanceWidth;
                 }                
 			}
 
@@ -1195,7 +1218,7 @@ namespace HYFontCodecCS
 			for (int i=0; i<LeftSideBearingNum; i++)
 			{
                 HMTX_LONGHORMERTRIC Longhormetric = new HMTX_LONGHORMERTRIC();
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
 
                 Longhormetric.lsb = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 Longhormetric.advanceWidth = uTmp;
@@ -1204,7 +1227,8 @@ namespace HYFontCodecCS
 
                 if (Chars != null)
                 {
-                    Chars.CharInfo[iCharIndex++].AdWidth = uTmp;
+                    if (Chars.CharInfo.Count > 0)
+                        Chars.CharInfo[iCharIndex++].AdWidth = uTmp;
                 }
                 
 			}	
@@ -1221,47 +1245,47 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.VHEA_TAG);
             if (iEntryIndex == -1) return HYRESULT.VHEA_NOEXIST;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             // version 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.version.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.version.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             // Typographic ascent
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.ascent = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.descent = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.lineGap = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.advanceHeightMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.minTop = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.minBottom = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.yMaxExtent = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.caretSlopeRise = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.caretSlopeRun = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.caretOffset = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.reserved1 = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.reserved2 = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.reserved3 = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.reserved4 = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.metricDataFormat = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Vhea.numOfLongVerMetrics = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             return HYRESULT.NOERROR;
@@ -1275,14 +1299,14 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.VMTX_TAG);
             if (iEntryIndex == -1) return HYRESULT.VMTX_NOEXIST;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             for (UInt16 i = 0; i < Vhea.numOfLongVerMetrics; i++)
             {
                 VMTX_LONGHORMETRIC Longhormetric = new VMTX_LONGHORMETRIC();
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Longhormetric.advanceHeight = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Longhormetric.tsb= (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 Vmtx.vtLongHormetric.Add(Longhormetric);
             }
@@ -1292,7 +1316,7 @@ namespace HYFontCodecCS
             for (int i = 0; i < TopSideBearingNum; i++)
             {
                 VMTX_LONGHORMETRIC Longhormetric = new VMTX_LONGHORMETRIC();
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
 
                 Longhormetric.tsb = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 Longhormetric.advanceHeight = uTmp;
@@ -1312,57 +1336,57 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.POST_TAG);
             if (iEntryIndex == -1) return HYRESULT.POST_NOEXIST;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             // version 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Post.version.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Post.version.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             // italicAngle
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Post.italicAngle.value = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Post.italicAngle.fract = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             //underlinePosition
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Post.underlinePosition= (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             //underlineThickness
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Post.underlineThickness = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
             //isFixedPitch
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Post.isFixedPitch = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
             //minMemType42
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Post.minMemType42 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
             //maxMemType42
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Post.maxMemType42 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
             //minMemType1
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Post.minMemType1 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
             //maxMemType1
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Post.maxMemType1 = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
             if (Post.version.value == 2 && Post.version.fract == 0)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 Post.PostFormat2.usNumberOfGlyphs = (ushort)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
                 int iOwnNameNumber = 0;
                 for (int i = 0; i < Post.PostFormat2.usNumberOfGlyphs; i++)
                 {
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     ushort usNameIdx = (ushort)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                     Post.PostFormat2.lstGlyphNameIndex.Add(usNameIdx);
                     if (usNameIdx > 257) {
@@ -1371,14 +1395,14 @@ namespace HYFontCodecCS
                 }
 
                 long lEndPos = tbEntry.offset+tbEntry.length;
-				long tmp = FRStrm.Position;
-				while (FRStrm.Position<lEndPos)
+				long tmp = FileStrm.Position;
+				while (FileStrm.Position<lEndPos)
 				{
-                    int iStringLen = FRStrm.ReadByte();					
+                    int iStringLen = FileStrm.ReadByte();					
 					Post.PostFormat2.lstNameLength.Add((char)iStringLen);
 					//string  strTmp;
                     byte[] strTmp = new byte[iStringLen];					
-                    FRStrm.Read(strTmp,0,iStringLen);
+                    FileStrm.Read(strTmp,0,iStringLen);
                     string str = System.Text.Encoding.Default.GetString(strTmp); 
                     Post.lstStandString.Add(str);
 				}
@@ -1398,48 +1422,48 @@ namespace HYFontCodecCS
             int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.COLR_TAG);
             if (iEntryIndex == -1) return HYRESULT.COLR_NOEXIST;
             CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
 
             // version 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Colr.version = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));            
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Colr.numBaseGlyphRecords = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Colr.baseGlyphRecordsOffset = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
-            FRStrm.Read(array, 0, 4);
+            FileStrm.Read(array, 0, 4);
             Colr.layerRecordsOffset = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             Colr.numLayerRecords = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Seek(tbEntry.offset + Colr.baseGlyphRecordsOffset,SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset + Colr.baseGlyphRecordsOffset,SeekOrigin.Begin);
           
             for (ushort i = 0; i < Colr.numBaseGlyphRecords; i++)
             {
                 CBaseGlyphRecord BaseGlyphRecord = new CBaseGlyphRecord();
 
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 BaseGlyphRecord.GID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 BaseGlyphRecord.firstLayerIndex = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 BaseGlyphRecord.numLayers = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
                 Colr.lstBaseGlyphRecord.Add(BaseGlyphRecord);
             }
             
-            FRStrm.Seek(tbEntry.offset + Colr.layerRecordsOffset, SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset + Colr.layerRecordsOffset, SeekOrigin.Begin);
             for (long i = 0; i < Colr.numLayerRecords; i++)
             {
                 CLayerRecord LayerRecord = new CLayerRecord();
 
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 LayerRecord.GID = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 LayerRecord.paletteIndex = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
                 Colr.lstLayerRecord.Add(LayerRecord);
@@ -1455,15 +1479,15 @@ namespace HYFontCodecCS
             List <UInt16>EndPotArray = new List<UInt16>();
             for (Int16 i = 0; i < charInf.ContourCount; i++)
             {
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 UInt16 PtNum = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 EndPotArray.Add(PtNum);
             }
 
-            FRStrm.Read(array, 0, 2);
+            FileStrm.Read(array, 0, 2);
             UInt16 instructionLength = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-            FRStrm.Seek(instructionLength,SeekOrigin.Current);                  
+            FileStrm.Seek(instructionLength,SeekOrigin.Current);                  
 
             List<byte>	vtflags = new List<byte>();
             int nPts = EndPotArray[charInf.ContourCount-1] + 1;
@@ -1472,12 +1496,12 @@ namespace HYFontCodecCS
 		    // 获取标记	
 		    for (int i=0;i<nPts;i++)
 		    {				    
-                FRStrm.Read(array, 0, 1);
+                FileStrm.Read(array, 0, 1);
                 vtflags.Add(array[0]);
 
                 if ((array[0]&0x0008)>0)
 			    {
-                    j = FRStrm.ReadByte();                   
+                    j = FileStrm.ReadByte();                   
 				    while (j-->0) 
 				    {
 					    i++;
@@ -1499,7 +1523,7 @@ namespace HYFontCodecCS
 
                 if ((flag&0x0002)>0)
 			    {				
-                    j=FRStrm.ReadByte();
+                    j=FileStrm.ReadByte();
                     if ((flag & 0x0010)>0)
 				    {
 					    // 正值      
@@ -1522,7 +1546,7 @@ namespace HYFontCodecCS
 				    }
 				    else
 				    {						
-                        FRStrm.Read(array, 0, 2);
+                        FileStrm.Read(array, 0, 2);
                         Ptx += (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                         xCoordinates.Add(Ptx);
 				    }
@@ -1535,7 +1559,7 @@ namespace HYFontCodecCS
                 byte flag = vtflags[i];
                 if ((flag&0x0004)>0)
 			    {		
-                    j=FRStrm.ReadByte();
+                    j=FileStrm.ReadByte();
                     if ((flag&0x0020)>0)
 				    {
 					    // 正值				
@@ -1559,7 +1583,7 @@ namespace HYFontCodecCS
 				    else
 				    {
 					    // SHORT 类型偏移
-                        FRStrm.Read(array, 0, 2);
+                        FileStrm.Read(array, 0, 2);
                         Pty += (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                         yCoordinates.Add(Pty);	
 				    }
@@ -1609,11 +1633,11 @@ namespace HYFontCodecCS
                 CmpInf  cmpst = new CmpInf();
                 cmpst.Arg = new List<int>();
 
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 flag = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
                 cmpst.Flag = flag;
 			    
-                FRStrm.Read(array, 0, 2);
+                FileStrm.Read(array, 0, 2);
                 cmpst.Gid  = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));	    		    
 			    
 
@@ -1623,16 +1647,16 @@ namespace HYFontCodecCS
 
 			    if ((cmpst.Flag&0x0001)>0)  //GLYF_CMPST_ARG_1_AND_2_ARE_WORDS
 			    {   
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.Arg.Add(hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)));
 
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.Arg.Add(hy_cdr_int16_to(BitConverter.ToUInt16(array, 0)));
 			    }
 			    else
 			    {
 				    ushort uArg1and2 = 0; 
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     uArg1and2 = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));				    
 				
 				    cmpst.Arg.Add((char)(uArg1and2 >> 8));
@@ -1641,30 +1665,30 @@ namespace HYFontCodecCS
 
 			    if ((cmpst.Flag&0x0008)>0) //GLYF_CMPST_WE_HAVE_A_SCALE
 			    {	
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.Scale = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
 			    }
 			    else if ((cmpst.Flag&0x0040)>0)    //GLYF_CMPST_WE_HAVE_AN_X_AND_Y_SCALE
 			    {
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.ScaleX = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 		
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.ScaleY = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 			    }
 			    else if ((cmpst.Flag&0x0080)>0) //GLYF_CMPST_WE_HAVE_A_TWO_BY_TWO
 			    {				    
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.ScaleX = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.Scale01= hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.Scale10= hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 				 
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     cmpst.ScaleY= hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 			    }
 
@@ -1846,7 +1870,7 @@ namespace HYFontCodecCS
 
 	    }	// end of void GetGlyfAdvancHeight()
 
-        protected HYRESULT DecodeCFF()
+        public HYRESULT DecodeCFF()
         {
             CFFInfo = new CCFFInfo();            
 
@@ -1854,13 +1878,13 @@ namespace HYFontCodecCS
 			if (iEntryIndex == -1) return HYRESULT.CFF_DECODE;
 
 			CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FRStrm.Seek(tbEntry.offset,SeekOrigin.Begin);
+            FileStrm.Seek(tbEntry.offset,SeekOrigin.Begin);
 
 			// head
-            CFFInfo.Header.major = (byte)FRStrm.ReadByte();
-            CFFInfo.Header.minor = (byte)FRStrm.ReadByte();
-            CFFInfo.Header.hdrSize = (byte)FRStrm.ReadByte();
-            CFFInfo.Header.offSize = (byte)FRStrm.ReadByte();			
+            CFFInfo.Header.major = (byte)FileStrm.ReadByte();
+            CFFInfo.Header.minor = (byte)FileStrm.ReadByte();
+            CFFInfo.Header.hdrSize = (byte)FileStrm.ReadByte();
+            CFFInfo.Header.offSize = (byte)FileStrm.ReadByte();			
 			
 			// name string 
 			DecodeNameString();
@@ -1908,7 +1932,7 @@ namespace HYFontCodecCS
 				string str;
 				iSize = (int)(nmInxd.vtOffset[i+1]-nmInxd.vtOffset[i]);
                 Byte[] Content = new Byte[iSize];
-                FRStrm.Read(Content, 0, iSize);
+                FileStrm.Read(Content, 0, iSize);
                 str = BitConverter.ToString(Content);
                 CFFInfo.vtFontName.Add(str);
 			}
@@ -1920,7 +1944,7 @@ namespace HYFontCodecCS
             CCFFIndex TopDictIndx = new CCFFIndex();
 			DecodeCFFIndex(ref TopDictIndx);
 
-			long					iBPos = FRStrm.Position;
+			long					iBPos = FileStrm.Position;
 			long					iCPos=0;
 			long					loperator	= 0 ;	
 			long		            ulTopDictSize=TopDictIndx.vtOffset[1]-TopDictIndx.vtOffset[0];
@@ -1930,14 +1954,14 @@ namespace HYFontCodecCS
             byte            bySecond;
 			while(iCPos<ulTopDictSize)
 			{
-                byFirst = (byte)FRStrm.ReadByte();				 
+                byFirst = (byte)FileStrm.ReadByte();				 
 				loperator			= 0;			 
 
 				 if (byFirst>=0 && byFirst<=21)
 				 {			
 					 if (byFirst==12)
 					 {
-                        bySecond = (byte)FRStrm.ReadByte();
+                        bySecond = (byte)FileStrm.ReadByte();
 						loperator = byFirst<<8|bySecond;					
 					 }
 					 else 				 
@@ -2090,12 +2114,12 @@ namespace HYFontCodecCS
 					}
 					else 
 					{						
-                        FRStrm.Seek(-1,SeekOrigin.Current);
+                        FileStrm.Seek(-1,SeekOrigin.Current);
 						f=DecodeDICTInteger();
 						vtOperand.Add((double)f);
 					}
 				}				
-                iCPos = FRStrm.Position - iBPos;
+                iCPos = FileStrm.Position - iBPos;
 			}
         
         }   // end of protected void DecodeTopDict()
@@ -2105,7 +2129,7 @@ namespace HYFontCodecCS
             CCFFIndex StringIndx = new CCFFIndex();
 			DecodeCFFIndex(ref StringIndx);
 
-			long ulDataBegin = FRStrm.Position;           
+			long ulDataBegin = FileStrm.Position;           
 			
 			long lSize=0;
 			for(ushort i=0; i<StringIndx.Count;i++)
@@ -2113,7 +2137,7 @@ namespace HYFontCodecCS
 				string str;
 				lSize = StringIndx.vtOffset[i+1]-StringIndx.vtOffset[i];
                 Byte[] Content = new Byte[lSize];
-                FRStrm.Read(Content, 0, (int)lSize);
+                FileStrm.Read(Content, 0, (int)lSize);
                 str = System.Text.Encoding.UTF8.GetString(Content);               
 
                 CFFInfo.stnStrings.szStandString.Add(str);			
@@ -2133,7 +2157,7 @@ namespace HYFontCodecCS
 		     byte ch;
 		    for (long i=0; i<ulSize; i++)
 		    {		    
-                ch = (byte)FRStrm.ReadByte();
+                ch = (byte)FileStrm.ReadByte();
 			    CFFInfo.globalSubIndex.vtData.Add(ch);
 		    }
         
@@ -2141,7 +2165,7 @@ namespace HYFontCodecCS
 
         protected void DecodeFDArray(long ulOffset, long lCFFBegPos)
         { 
-            FRStrm.Seek(ulOffset,SeekOrigin.Begin);           
+            FileStrm.Seek(ulOffset,SeekOrigin.Begin);           
 
 			CCFFIndex		PdictIndex = new CCFFIndex();
 			DecodeCFFIndex(ref PdictIndex);
@@ -2153,19 +2177,19 @@ namespace HYFontCodecCS
 				CCFFPrivteDict				PrvtDict = new CCFFPrivteDict();
 				List<double>				vtOperand = new List<double>();
 				long						loperator	= 0;			
-				long					    iBPos = FRStrm.Position;
+				long					    iBPos = FileStrm.Position;
 				long				        iCPos = 0;
 				byte				        byFirst, bySecond;
 
 				while (iCPos<iDataSize)
 				{	
-                    byFirst = (byte)FRStrm.ReadByte();
+                    byFirst = (byte)FileStrm.ReadByte();
 					// operator 
 					if (byFirst>=0 && byFirst<=21)
 					{			
 						if (byFirst==12)
 						{	
-                            bySecond = (byte)FRStrm.ReadByte();
+                            bySecond = (byte)FileStrm.ReadByte();
 							loperator = byFirst<<8|bySecond;					
 						}
 						else 			
@@ -2177,11 +2201,11 @@ namespace HYFontCodecCS
 						}
 						else 
 						{
-							long unCurnPin = FRStrm.Position;
+							long unCurnPin = FileStrm.Position;
                             if (vtOperand.Count>1)
                             {
                                 DecodePrivteDict(ref PrvtDict, (long)(vtOperand[1]) + lCFFBegPos, (long)vtOperand[0]);
-                                FRStrm.Seek(unCurnPin, SeekOrigin.Begin);
+                                FileStrm.Seek(unCurnPin, SeekOrigin.Begin);
                                 CFFInfo.vtFDArry.Add(PrvtDict);
                             }							
 						}
@@ -2197,12 +2221,12 @@ namespace HYFontCodecCS
 						}
 						else 
 						{							
-                            FRStrm.Seek(-1, SeekOrigin.Current);
+                            FileStrm.Seek(-1, SeekOrigin.Current);
 							f = (double)DecodeDICTInteger();
 							vtOperand.Add(f);
 						}
 					}					
-                    iCPos = FRStrm.Position - iBPos;
+                    iCPos = FileStrm.Position - iBPos;
 				}
 			}
         
@@ -2210,23 +2234,23 @@ namespace HYFontCodecCS
 
         protected void DecodePrivteDict(ref CCFFPrivteDict PrvtDict, long lOffset, long ulDataSize)
         {            
-            FRStrm.Seek(lOffset,SeekOrigin.Begin);
+            FileStrm.Seek(lOffset,SeekOrigin.Begin);
 			List<double>				    vtOperand = new List<double>();
 			long							loperator	= 0;			
-			long					        iBPos = FRStrm.Position;
+			long					        iBPos = FileStrm.Position;
 			long					        iCPos = 0;
 			byte					        byFirst, bySecond;
 			
 			while (iCPos<ulDataSize)
 			{	
-                byFirst = (byte)FRStrm.ReadByte();
+                byFirst = (byte)FileStrm.ReadByte();
 
 				// operator 
 				if (byFirst>=0 && byFirst<=21)
 				{			
 					if (byFirst == 12)
 					{						
-                        bySecond = (byte)FRStrm.ReadByte();
+                        bySecond = (byte)FileStrm.ReadByte();
 						loperator = byFirst<<8|bySecond;					
 					}
 					else 				
@@ -2289,8 +2313,8 @@ namespace HYFontCodecCS
 						case 0x13://CFF_DICT_OPERATOR_SUBRS:
 							{
 								long lSubOffset = lOffset+(long)vtOperand[0];
-								long lCurPos = FRStrm.Position;
-                                FRStrm.Seek(lSubOffset,SeekOrigin.Begin);							
+								long lCurPos = FileStrm.Position;
+                                FileStrm.Seek(lSubOffset,SeekOrigin.Begin);							
 								
 								DecodeCFFIndex(ref PrvtDict.SubIndex);		
 								long lSize = 0;
@@ -2302,10 +2326,10 @@ namespace HYFontCodecCS
 								byte ch;
 								for (long i=0; i<lSize; i++)
 								{									
-                                    ch = (byte)FRStrm.ReadByte();
+                                    ch = (byte)FileStrm.ReadByte();
 									PrvtDict.SubIndex.vtData.Add(ch);
 								}							
-                                FRStrm.Seek(lCurPos,SeekOrigin.Begin);
+                                FileStrm.Seek(lCurPos,SeekOrigin.Begin);
 							}	
 							break;
 						case 0x14://CFF_DICT_OPERATOR_DEFAULTWIDTHX:						
@@ -2331,21 +2355,21 @@ namespace HYFontCodecCS
 					}
 					else 
 					{						
-                        FRStrm.Seek(-1, SeekOrigin.Current);
+                        FileStrm.Seek(-1, SeekOrigin.Current);
 						f=(double)DecodeDICTInteger();
 						vtOperand.Add(f);
 					}			
 				}				
-                iCPos = FRStrm.Position - iBPos;
+                iCPos = FileStrm.Position - iBPos;
 			}				
 
         }   // end of protected void DecodePrivteDict()
 
         protected void DecodeFDSelect(long lOffset)
         {
-            FRStrm.Seek(lOffset, SeekOrigin.Begin);
+            FileStrm.Seek(lOffset, SeekOrigin.Begin);
 
-            byte uch=(byte)FRStrm.ReadByte();			
+            byte uch=(byte)FileStrm.ReadByte();			
 			int	                nTmp = 0;
 			//byte			    btmp = 0;
 			CFFInfo.FDSelect.iFormat = uch;
@@ -2353,7 +2377,7 @@ namespace HYFontCodecCS
 			{
 				for (long i=0; i<CFFInfo.TopDICT.CIDCount; i++)
 				{
-					uch=(byte)FRStrm.ReadByte();
+					uch=(byte)FileStrm.ReadByte();
 					CFFInfo.FDSelect.format0.Add(uch);
 				}
 			}		
@@ -2361,26 +2385,26 @@ namespace HYFontCodecCS
 			if (uch==3)
 			{
 				nTmp = 0;
-				uch=(byte)FRStrm.ReadByte();			
+				uch=(byte)FileStrm.ReadByte();			
 				nTmp |= uch<<8;
-				uch=(byte)FRStrm.ReadByte();
+				uch=(byte)FileStrm.ReadByte();
 				nTmp |= uch;				
 
 				for(int i=0; i<nTmp; i++)
 				{
 					CCFFFDSRang3	FDRang3 = new CCFFFDSRang3();
-                    uch=(byte)FRStrm.ReadByte();
+                    uch=(byte)FileStrm.ReadByte();
 					FDRang3.first |= (short)(uch<<8);
-					uch=(byte)FRStrm.ReadByte();
+					uch=(byte)FileStrm.ReadByte();
 					FDRang3.first |= uch;
 
-                    FDRang3.fdIndex=(byte)FRStrm.ReadByte();					
+                    FDRang3.fdIndex=(byte)FileStrm.ReadByte();					
 					CFFInfo.FDSelect.format3.vtRang3.Add(FDRang3);
 				}
 				nTmp = 0;
-				uch=(byte)FRStrm.ReadByte();	
+				uch=(byte)FileStrm.ReadByte();	
 				nTmp |= uch<<8;
-				uch=(byte)FRStrm.ReadByte();	
+				uch=(byte)FileStrm.ReadByte();	
 				nTmp |= uch;
 				CFFInfo.FDSelect.format3.sentinel= (ushort)nTmp;
 			}	
@@ -2389,10 +2413,10 @@ namespace HYFontCodecCS
 
         protected void DecodeCharSets(long lOffset)
         { 
-            FRStrm.Seek(lOffset, SeekOrigin.Begin);
+            FileStrm.Seek(lOffset, SeekOrigin.Begin);
 
 			byte uch;
-            uch = (byte)FRStrm.ReadByte();
+            uch = (byte)FileStrm.ReadByte();
 
 			int			i = 0;
 			ushort	    nTmp = 0;
@@ -2405,7 +2429,7 @@ namespace HYFontCodecCS
                 int st = Maxp.numGlyphs - 1;
 				for (i=0; i<st; i++)
 				{
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
 					nTmp = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
 					CFFInfo.Charset.format0.vtSID.Add(nTmp);
 				}				
@@ -2418,10 +2442,10 @@ namespace HYFontCodecCS
 				while (CharSetNum<stGlyphNum)
 				{
 					CCFFCSFormatRang1 csr1=new CCFFCSFormatRang1();
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     nTmp = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));								
 					
-                    btmp = (byte)FRStrm.ReadByte();
+                    btmp = (byte)FileStrm.ReadByte();
 					csr1.first = nTmp;
 					csr1.left = btmp;
 					CFFInfo.Charset.format1.vtRang.Add(csr1);
@@ -2436,10 +2460,10 @@ namespace HYFontCodecCS
 				while (CharSetNum<stGlyphNum)
 				{
 				    CCFFCSFormatRang2 csr2 = new CCFFCSFormatRang2();					
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
 					nTmp = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
 					csr2.first = nTmp;
-                    FRStrm.Read(array, 0, 2);
+                    FileStrm.Read(array, 0, 2);
                     nTmp = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));					
 					csr2.left = nTmp;
 					CFFInfo.Charset.format2.vtRang.Add(csr2);
@@ -2487,7 +2511,7 @@ namespace HYFontCodecCS
 
         protected void DecodeCharString(long lOffset)
         {   
-            FRStrm.Seek(lOffset, SeekOrigin.Begin);
+            FileStrm.Seek(lOffset, SeekOrigin.Begin);
 			
 			CCFFIndex	CharStringIndx = new CCFFIndex();
 			DecodeCFFIndex(ref CharStringIndx);
@@ -2504,7 +2528,7 @@ namespace HYFontCodecCS
                 if (uCharDataSize < 0x80000)
                 {
                     byte[] charData = new byte[0x80000];
-                    FRStrm.Read(charData, 0, uCharDataSize);
+                    FileStrm.Read(charData, 0, uCharDataSize);
 
                     ContourInfo cnurInfo = new ContourInfo();
                     DecodeCharData(ref charData, uCharDataSize, ref sChar, i, ref AdbWidht, ref CharParam, iDept, ref cnurInfo);
@@ -3955,11 +3979,11 @@ namespace HYFontCodecCS
 			//ulong	DataSize = 0;
             byte[]  array = new byte[2];
 
-            FRStrm.Read(array,0,2);
+            FileStrm.Read(array,0,2);
             CffIndex.Count = hy_cdr_int16_to(BitConverter.ToUInt16(array,0));
 			if(CffIndex.Count>0)
 			{				
-                CffIndex.Offsize = (byte)FRStrm.ReadByte();
+                CffIndex.Offsize = (byte)FileStrm.ReadByte();
 				for (i=0; i<CffIndex.Count; i++)
 				{				
 					loffset = DecodeCFFInteger(CffIndex.Offsize);					
@@ -3982,16 +4006,16 @@ namespace HYFontCodecCS
 				switch(i)
 				{
 					case 0:						
-			            B0 = (byte)FRStrm.ReadByte(); 
+			            B0 = (byte)FileStrm.ReadByte(); 
 						break;
 					case 1:
-						B1 = (byte)FRStrm.ReadByte(); 		
+						B1 = (byte)FileStrm.ReadByte(); 		
 						break;
 					case 2:
-						B2 = (byte)FRStrm.ReadByte(); 		
+						B2 = (byte)FileStrm.ReadByte(); 		
 						break;
 					case 3:
-						B3 = (byte)FRStrm.ReadByte(); 		
+						B3 = (byte)FileStrm.ReadByte(); 		
 						break;
 					default:
 						break;
@@ -4025,7 +4049,7 @@ namespace HYFontCodecCS
             long	Integer = 0xffffffff;
 
             int	B0=0, B1=0, B2=0, B3=0, B4=0;	
-	        B0 = FRStrm.ReadByte();
+	        B0 = FileStrm.ReadByte();
 
 			// b0 range 32 - 246
 			if (B0>31 && B0<247)
@@ -4036,32 +4060,32 @@ namespace HYFontCodecCS
 			// b0 rang 247 - 250
 			if (B0>246 && B0<251)
 			{					
-	            B1 = FRStrm.ReadByte();
+	            B1 = FileStrm.ReadByte();
 				return Integer = (B0-247)* 256+B1+108;
 			}
 
 			// b0 rang 251 - 254
 			if (B0>250 && B0<255)
 			{
-				B1 = FRStrm.ReadByte();	
+				B1 = FileStrm.ReadByte();	
 				return Integer = -(B0 - 251)* 256-B1-108;
 			}
 
 			// b0 rang 28
 			if (B0 == 28 )
 			{
-                B1 = FRStrm.ReadByte();	
-                B2 = FRStrm.ReadByte();						
+                B1 = FileStrm.ReadByte();	
+                B2 = FileStrm.ReadByte();						
 				return Integer = B1<<8|B2;
 			}
 
 			// b0 rang 29
 			if (B0 == 29 )
 			{	
-				B1 = FRStrm.ReadByte();	
-                B2 = FRStrm.ReadByte();	
-	            B3 = FRStrm.ReadByte();	
-                B4 = FRStrm.ReadByte();	
+				B1 = FileStrm.ReadByte();	
+                B2 = FileStrm.ReadByte();	
+	            B3 = FileStrm.ReadByte();	
+                B4 = FileStrm.ReadByte();	
 
 				return Integer = B1<<24|B2<<16|B3<<8|B4;
 			}
@@ -4084,7 +4108,7 @@ namespace HYFontCodecCS
 			while (going)
 			{
 				byte		a;
-                a = (byte)FRStrm.ReadByte();				
+                a = (byte)FileStrm.ReadByte();				
 				for (uint i=0; i<2; ++i)
 				{
 					int		nybble= i>0?a&0xf:a>>4;

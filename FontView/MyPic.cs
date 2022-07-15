@@ -46,7 +46,11 @@ namespace FontView
             lstCmpsPath = new List<GraphicsPath>();
             lstCmpsIndex = new List<int>();
 
-            fScale = (float)this.Size.Width/(float)head.unitsPerEm;
+            if (head.unitsPerEm> hhea.Ascender-hhea.Descender)
+                fScale = (float)this.Size.Height/(float)head.unitsPerEm;
+            else
+                fScale = (float)this.Size.Height / (float)(hhea.Ascender - hhea.Descender);
+
             fBaseLine = Math.Abs(hhea.Descender);
 
             m_fWndBaseLine = (float)this.Size.Height - Math.Abs(fBaseLine * fScale);

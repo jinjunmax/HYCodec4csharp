@@ -76,6 +76,22 @@ namespace HYFontCodecCS
 
         }   // end of public static HYRESULT ReadCharFileToUnicode()
 
-        
+        public static HYRESULT ReadCodeFile(string CharFile, ref List<UInt32> lstUnicode)
+        {
+            FileInfo flinfo = new FileInfo(CharFile);
+            if (!flinfo.Exists) return HYRESULT.FILE_NOEXIST;
+
+            foreach (string strunicode in File.ReadLines(CharFile))
+            {
+                strunicode.Trim();
+                UInt32 unicode = Convert.ToUInt32(strunicode,16);
+                lstUnicode.Add(unicode);
+            }
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public static HYRESULT ReadCharFileToUnicode()
+
+
     }
 }

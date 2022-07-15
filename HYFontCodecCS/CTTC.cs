@@ -44,7 +44,7 @@ namespace HYFontCodecCS
             catch (Exception e)
             {
                 e.ToString();
-                throw;
+                throw;                
             }
 
             return HYRESULT.NOERROR;
@@ -88,10 +88,10 @@ namespace HYFontCodecCS
         public HYRESULT FontToTTC(List<string> lstFontNames)
         {
             HYRESULT hr;
-            List<HYDecodeC> lstFonts = new List<HYDecodeC>();
+            List<HYDecode> lstFonts = new List<HYDecode>();
             foreach (string strfile in  lstFontNames)
             {
-                HYDecodeC fntDecode = new HYDecodeC();
+                HYDecode fntDecode = new HYDecode();
                 hr = fntDecode.FontDecode(strfile);
                 if (hr != HYRESULT.NOERROR) return hr;
             }
@@ -170,7 +170,7 @@ namespace HYFontCodecCS
         {
             byte[] byTmp = new byte[4];            
 
-            HYEncode FontEncode = new HYEncode();
+            HYEncodeBase FontEncode = new HYEncodeBase();
             FontEncode.tbDirectory = new CTableDirectory();
             
             ttcFile.Seek(loffsetTable, SeekOrigin.Begin);

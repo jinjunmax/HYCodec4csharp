@@ -58,14 +58,14 @@ namespace HYFontCodecCS
         /// <returns>HYRESULT</returns> 
         public HYRESULT ExtractFont(string strTTFFile, string strNewTTFFile, List<UInt32> lstunicode, int CMAP, ref List<UInt32> lstMssUni)
         {
-            HYDecodeC FontDecode = new HYDecodeC();
+            HYDecode FontDecode = new HYDecode();
             HYRESULT sult = PrepareExtractFont(strTTFFile, ref FontDecode);
             if (sult != HYRESULT.NOERROR) return sult;
 
             List<byte> lstGlyphData = new List<byte>();
             List<uint> vtTableFlag = new List<uint>();
 
-            HYEncode FontEncode = new HYEncode();
+            HYEncodeBase FontEncode = new HYEncodeBase();
           
             sult = Extrace(FontDecode, ref FontEncode, lstunicode, ref lstGlyphData, ref lstMssUni);
                 
@@ -92,7 +92,7 @@ namespace HYFontCodecCS
 
         public HYRESULT GetSubset(string strTTFFile, string strNewTTFFile, List<UInt32> lstunicode, int CMAP, ref List<UInt32> lstMssUni)
         {   
-            HYDecodeC FontDecode = new HYDecodeC();
+            HYDecode FontDecode = new HYDecode();
             HYRESULT sult = PrepareExtractFont(strTTFFile, ref FontDecode);
             if (sult != HYRESULT.NOERROR) return sult;
 
@@ -108,7 +108,7 @@ namespace HYFontCodecCS
 
         }   // end of public HYRESULT GetSubset()
 
-        public void MakeFont(ref HYDecodeC FontDecode, byte[] pGlpyData, string strNewTTFFile, ushort maxGID)
+        public void MakeFont(ref HYDecode FontDecode, byte[] pGlpyData, string strNewTTFFile, ushort maxGID)
         {   
             try {
                 if (File.Exists(strNewTTFFile)){
@@ -120,7 +120,7 @@ namespace HYFontCodecCS
                 throw;
             }
 
-            HYEncode FontEncode = new HYEncode();
+            HYEncodeBase FontEncode = new HYEncodeBase();
             FontEncode.FontOpen(strNewTTFFile);
 
             FontEncode.FntType = FontDecode.FntType;
@@ -132,14 +132,14 @@ namespace HYFontCodecCS
             {
                 CTableEntry HYEntry = FontEncode.tbDirectory.vtTableEntry[i];
                 if (HYEntry.tag == (uint)TABLETAG.LOCA_TAG){
-                    BulidLOCAL(ref FontEncode.FRStrm, ref HYEntry, FontDecode);
+                    BulidLOCAL(ref FontEncode.FileStrm, ref HYEntry, FontDecode);
                 }
                 else if (HYEntry.tag == (uint)TABLETAG.GLYF_TAG){
-                    BulidGlyph(ref FontEncode.FRStrm, ref HYEntry, pGlpyData);                    
+                    BulidGlyph(ref FontEncode.FileStrm, ref HYEntry, pGlpyData);                    
                 }
                 else if (HYEntry.tag == (uint)TABLETAG.HEAD_TAG)
                 {
-                   BulidHead(ref FontEncode.FRStrm, ref HYEntry, FontDecode);
+                   BulidHead(ref FontEncode.FileStrm, ref HYEntry, FontDecode);
                 }
                 else if (HYEntry.tag == (uint)TABLETAG.CMAP_TAG)
                 {                    
@@ -160,20 +160,20 @@ namespace HYFontCodecCS
                     FontDecode.tbPost.maxMemType42 = 0;
                     FontDecode.tbPost.minMemType1 = 0;
                     FontDecode.tbPost.maxMemType1 = 0;
-                    Bulidepost(ref FontEncode.FRStrm, ref HYEntry, FontDecode);
+                    Bulidepost(ref FontEncode.FileStrm, ref HYEntry, FontDecode);
                     
                 }
                 else if(HYEntry.tag == (uint)TABLETAG.HHEA_TAG)
                 {
-                    Bulidhhea(ref FontEncode.FRStrm, ref HYEntry, FontDecode, maxGID);
+                    Bulidhhea(ref FontEncode.FileStrm, ref HYEntry, FontDecode, maxGID);
                 }
                 else if (HYEntry.tag == (uint)TABLETAG.HMTX_TAG)
                 {
-                    Buildhmtx(ref FontEncode.FRStrm, ref HYEntry, FontDecode, maxGID);
+                    Buildhmtx(ref FontEncode.FileStrm, ref HYEntry, FontDecode, maxGID);
                 }
                 else if (HYEntry.tag == (uint)TABLETAG.MAXP_TAG)
                 {
-                    Buildmaxp(ref FontEncode.FRStrm, ref HYEntry, FontDecode, maxGID);
+                    Buildmaxp(ref FontEncode.FileStrm, ref HYEntry, FontDecode, maxGID);
                 }
                 else
                 {
@@ -197,14 +197,14 @@ namespace HYFontCodecCS
                 CTableEntry HYEntry = FontEncode.tbDirectory.vtTableEntry[i];
                 uint CheckBufSz = (HYEntry.length + 3) / 4 * 4;
                 byte[] pCheckBuf = new byte[CheckBufSz];
-                FontEncode.FRStrm.Seek(HYEntry.offset, SeekOrigin.Begin);
-                FontEncode.FRStrm.Read(pCheckBuf, 0, (int)CheckBufSz);
+                FontEncode.FileStrm.Seek(HYEntry.offset, SeekOrigin.Begin);
+                FontEncode.FileStrm.Read(pCheckBuf, 0, (int)CheckBufSz);
 
                 HYEntry.checkSum = CalcFontTableChecksum(pCheckBuf);
             }
             FontEncode.EncodeTableDirectory();
-            FontEncode.FRStrm.Flush();
-            FontEncode.FRStrm.Close();
+            FontEncode.FileStrm.Flush();
+            FontEncode.FileStrm.Close();
 
             FontEncode.SetCheckSumAdjustment(strNewTTFFile);
 
@@ -232,7 +232,7 @@ namespace HYFontCodecCS
 
         }	// end of unsigned long CalcFontTableChecksum()
 
-        void BulidLOCAL(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode)
+        void BulidLOCAL(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecode FontDecode)
         {
             HYEntry.offset = (uint)FWStrm.Position;
 
@@ -265,7 +265,7 @@ namespace HYFontCodecCS
 
         }	// end of void BulidLOCAL()
 
-        public HYRESULT Bulidepost(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode)
+        public HYRESULT Bulidepost(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecode FontDecode)
         {
             HYEntry.offset = (uint)FWStrm.Position;
 
@@ -377,7 +377,7 @@ namespace HYFontCodecCS
 
         }	// end of void BulidGlyph()
 
-        public HYRESULT Buildmaxp(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode, ushort imaxGID)
+        public HYRESULT Buildmaxp(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecode FontDecode, ushort imaxGID)
         {
             HYEntry.offset = (uint)FWStrm.Position;
 
@@ -487,7 +487,7 @@ namespace HYFontCodecCS
 
         }   // end of protected HYRESULT Buildmaxp()
 
-        public HYRESULT Bulidhhea(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode, ushort imaxGID)
+        public HYRESULT Bulidhhea(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecode FontDecode, ushort imaxGID)
         {
             HYEntry.offset = (uint)FWStrm.Position;
 
@@ -583,7 +583,7 @@ namespace HYFontCodecCS
 
         }   // end of public HYRESULT Bulidhhea()
 
-        public HYRESULT Buildhmtx(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode,ushort imaxGID)
+        public HYRESULT Buildhmtx(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecode FontDecode,ushort imaxGID)
         {          
             HYEntry.offset = (uint)FWStrm.Position;
 
@@ -629,7 +629,7 @@ namespace HYFontCodecCS
 
         }   // end of protected HYRESULT Buildhmtx()
 
-        void BulidHead(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecodeC FontDecode)
+        void BulidHead(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecode FontDecode)
         {            
             HYEntry.offset = (uint)FWStrm.Position;
 
@@ -756,7 +756,7 @@ namespace HYFontCodecCS
 
         }	// end of BOOL HYCodeMapSortPredicate()
 
-        void MakeCMAP(ref HYEncode FontEncode)
+        void MakeCMAP(ref HYEncodeBase FontEncode)
         {            
             CCmap cmap = new CCmap();
 
@@ -790,9 +790,9 @@ namespace HYFontCodecCS
 
         }   // end of void MakeCMAP()
 
-        public HYRESULT Encodecmap(ref HYEncode encode, ref CTableEntry HYEntry,List<HYCodeMapItem> lstCodeMap)
+        public HYRESULT Encodecmap(ref HYEncodeBase encode, ref CTableEntry HYEntry,List<HYCodeMapItem> lstCodeMap)
         {
-            FileStream FWStrm = encode.FRStrm;
+            FileStream FWStrm = encode.FileStrm;
             CCmap Cmap = encode.tbCmap;
             HYEntry.offset = (uint)FWStrm.Position;
 
@@ -1291,10 +1291,10 @@ namespace HYFontCodecCS
                 for (int w = 0; w < btTmp.Length; w++) vtCmap.Add(btTmp[w]);
             }
 
-            entry.offset = (uint)(FRStrm.Position - entry.offset);
+            entry.offset = (uint)(FileStrm.Position - entry.offset);
             for (int y = 0; y < vtCmap.Count; y++)
             {
-                FRStrm.WriteByte(vtCmap[y]);
+                FileStrm.WriteByte(vtCmap[y]);
             }
 
         }   // end of protected HYRESULT	EncodeCmapFmt12()
@@ -1363,7 +1363,7 @@ namespace HYFontCodecCS
 
         }	// end of void CFontExtract::WriteTableEntry()
 
-        public HYRESULT PrepareExtractFont(string strTTFFile, ref HYDecodeC FontDecode)
+        public HYRESULT PrepareExtractFont(string strTTFFile, ref HYDecode FontDecode)
         {
             try{
                 FontDecode.FontOpen(strTTFFile);
@@ -1372,13 +1372,9 @@ namespace HYFontCodecCS
                 ext.ToString();
                 return HYRESULT.FILE_OPEN;
             }
-
-            FontDecode.DecodeTableDirectory();
+            
             if (FontDecode.tbDirectory.version.value != 1 && FontDecode.tbDirectory.version.fract != 0)
                 return HYRESULT.NO_TTF; // 不是truetype
-
-            if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GLYF_TAG) == -1) return HYRESULT.GLYF_DECODE;
-
             if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.CMAP_TAG) == -1) return HYRESULT.CMAP_DECODE;
             FontDecode.DecodeCmap();
             if (FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.MAXP_TAG) == -1) return HYRESULT.MAXP_DECODE;
@@ -1466,7 +1462,7 @@ namespace HYFontCodecCS
 
         }   // end of public HYRESULT PrepareExtractFont()
 
-        byte[] FilterGlyphs(ref HYDecodeC Decode, ref List<UInt32> lstunicode,ref ushort maxGID)
+        byte[] FilterGlyphs(ref HYDecode Decode, ref List<UInt32> lstunicode,ref ushort maxGID)
         {
             int stUni = lstunicode.Count;
             int iEntryIndex = Decode.tbDirectory.FindTableEntry((int)TABLETAG.GLYF_TAG);
@@ -1480,48 +1476,96 @@ namespace HYFontCodecCS
             mapItm.GID = 0;
             Decode.codemap.lstCodeMap.Add(mapItm);
 
-            uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];            
+            /*
+                        uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];            
+                        for (int i = 0; i < stUni; i++)
+                        {
+                            int iIndex = Decode.FindGryphIndexByUnciode(lstunicode[i]);
+                            if (iIndex > maxGID) 
+                                maxGID = (ushort)iIndex;
+
+                            if (CheckGid(ref Decode.codemap.lstCodeMap, iIndex)) {
+                                HYCodeMapItem cdMapItem = new HYCodeMapItem();
+                                cdMapItem.GID = iIndex;
+                                cdMapItem.Unicode = lstunicode[i];                    
+                                Decode.codemap.lstCodeMap.Add(cdMapItem);
+
+                                uint lca0 = Decode.tbLoca.vtLoca[iIndex];
+                                uint lca1 = Decode.tbLoca.vtLoca[iIndex + 1];
+                                if (lca1 > lca0) {
+                                    Decode.DecodeStream.Seek(entry.offset + lca0, SeekOrigin.Begin);
+
+                                    List<int> vtCmpGID = new List<int>();
+                                    IsCompositeGlyph(ref Decode, ref vtCmpGID);
+                                    for (int j = 0; j < vtCmpGID.Count; j++) {
+                                        if (vtCmpGID[j] > maxGID)
+                                            maxGID = (ushort)vtCmpGID[j];
+
+                                        if (CheckGid(ref Decode.codemap.lstCodeMap, vtCmpGID[j])) {
+                                            if (Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] > Decode.tbLoca.vtLoca[vtCmpGID[j]]){
+                                                ulGlyphsLen += Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] - Decode.tbLoca.vtLoca[vtCmpGID[j]];
+
+                                                HYCodeMapItem item = new HYCodeMapItem();
+                                                item.GID = vtCmpGID[j];
+                                                item.Unicode = 0xffffffff;
+                                                Decode.codemap.lstCodeMap.Add(item);
+                                            }
+                                        }
+                                    }
+                                    ulGlyphsLen += Decode.tbLoca.vtLoca[iIndex + 1] - Decode.tbLoca.vtLoca[iIndex];
+                                }
+                            }
+
+                        }
+            */
+
+            uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];
             for (int i = 0; i < stUni; i++)
             {
                 int iIndex = Decode.FindGryphIndexByUnciode(lstunicode[i]);
-                if (iIndex > maxGID) 
+                if (iIndex > maxGID)
                     maxGID = (ushort)iIndex;
 
-                if (CheckGid(ref Decode.codemap.lstCodeMap, iIndex)) {
+                if (CheckGid(ref Decode.codemap.lstCodeMap, iIndex))
+                {
                     HYCodeMapItem cdMapItem = new HYCodeMapItem();
                     cdMapItem.GID = iIndex;
-                    cdMapItem.Unicode = lstunicode[i];                    
+                    cdMapItem.Unicode = lstunicode[i];
                     Decode.codemap.lstCodeMap.Add(cdMapItem);
 
                     uint lca0 = Decode.tbLoca.vtLoca[iIndex];
                     uint lca1 = Decode.tbLoca.vtLoca[iIndex + 1];
-                    if (lca1 > lca0) {
+                    if (lca1 > lca0)
+                    {
                         Decode.DecodeStream.Seek(entry.offset + lca0, SeekOrigin.Begin);
 
                         List<int> vtCmpGID = new List<int>();
                         IsCompositeGlyph(ref Decode, ref vtCmpGID);
-
-                        for (int j = 0; j < vtCmpGID.Count; j++) {
+                        for (int j = 0; j < vtCmpGID.Count; j++)
+                        {
                             if (vtCmpGID[j] > maxGID)
                                 maxGID = (ushort)vtCmpGID[j];
 
-                            if (CheckGid(ref Decode.codemap.lstCodeMap, vtCmpGID[j])) {
-                                if (Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] > Decode.tbLoca.vtLoca[vtCmpGID[j]]){
+                            if (CheckGid(ref Decode.codemap.lstCodeMap, vtCmpGID[j]))
+                            {
+                                if (Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] > Decode.tbLoca.vtLoca[vtCmpGID[j]])
+                                {
                                     ulGlyphsLen += Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] - Decode.tbLoca.vtLoca[vtCmpGID[j]];
 
                                     HYCodeMapItem item = new HYCodeMapItem();
                                     item.GID = vtCmpGID[j];
                                     item.Unicode = 0xffffffff;
-                                    Decode.codemap.lstCodeMap.Add(cdMapItem);
+                                    Decode.codemap.lstCodeMap.Add(item);
                                 }
                             }
                         }
+
+
                         ulGlyphsLen += Decode.tbLoca.vtLoca[iIndex + 1] - Decode.tbLoca.vtLoca[iIndex];
                     }
                 }
 
             }
-
             // 分配好子集字形内存            
             uint Real = (ulGlyphsLen + 3) / 4 * 4;
             byte[] pOutGlyphs = new byte[Real];
@@ -1557,7 +1601,7 @@ namespace HYFontCodecCS
 
         }	// end of int CFontExtract::FilterGlyphs()
 
-        bool IsCompositeGlyph(ref HYDecodeC Decode, ref List<int> vtCmpGID)
+        bool IsCompositeGlyph(ref HYDecode Decode, ref List<int> vtCmpGID)
         {
             ushort usTmp = 0;            
             ushort flags = 0;
@@ -1638,7 +1682,7 @@ namespace HYFontCodecCS
         public HYRESULT ModifyFontInfo(string strFileName, string strNewFileName,HYFontInfo Fntinf)
         {
             HYRESULT sult;
-            HYDecodeC FontDecode = new HYDecodeC();            
+            HYDecode FontDecode = new HYDecode();            
         
             try
             {
@@ -1650,7 +1694,7 @@ namespace HYFontCodecCS
                 return HYRESULT.FILE_OPEN;
             }
 
-            HYEncode FontEncode = new HYEncode();
+            HYEncodeBase FontEncode = new HYEncodeBase();
             sult = FontDecode.DecodeTableDirectory();
             if (sult != HYRESULT.NOERROR)
             {
@@ -1775,7 +1819,7 @@ namespace HYFontCodecCS
 
         }   // end of HYRESULT ModifyFontInfo()
 
-        HYRESULT Extrace(HYDecodeC FontDecode, ref HYEncode FontEncode, List<uint> lstUnicode, ref List<byte> lstGlyphData,ref List<UInt32> lstMssUni)
+        HYRESULT Extrace(HYDecode FontDecode, ref HYEncodeBase FontEncode, List<uint> lstUnicode, ref List<byte> lstGlyphData,ref List<UInt32> lstMssUni)
         {
             int iEntryIndex = FontDecode.tbDirectory.FindTableEntry((uint)TABLETAG.GLYF_TAG);
             CTableEntry entry = FontDecode.tbDirectory.vtTableEntry[iEntryIndex];
@@ -1914,8 +1958,8 @@ namespace HYFontCodecCS
         }   // end of HYRESULT Extrace()
 
         bool BuildGlyphData(
-                            HYDecodeC FontDecode, 
-                            HYEncode FontEncode,
+                            HYDecode FontDecode, 
+                            HYEncodeBase FontEncode,
                             ref List<byte> lstGlyphData,
                             int GID,
                             ref List<uint> vtloca, 
@@ -2019,7 +2063,7 @@ namespace HYFontCodecCS
 
         }   // end of bool BuildGlyphData()
 
-        HYRESULT BulidFont(string strFontName, HYDecodeC FontDecode, HYEncode FontEncode, List<byte> lstGlyphData, List<uint> vtTableFlag,List<uint> lstUnicode)
+        HYRESULT BulidFont(string strFontName, HYDecode FontDecode, HYEncodeBase FontEncode, List<byte> lstGlyphData, List<uint> vtTableFlag,List<uint> lstUnicode)
         {            
             try
             {
@@ -2217,7 +2261,7 @@ namespace HYFontCodecCS
 
         }   //end of HYRESULT BulidFont()
 
-        HYRESULT BulidCMAP(HYEncode FontEnCodec, List<uint> lstUnicoe)
+        HYRESULT BulidCMAP(HYEncodeBase FontEnCodec, List<uint> lstUnicoe)
         {
             int iEncodeEntryIndex = FontEnCodec.tbDirectory.FindTableEntry((UInt32)TABLETAG.CMAP_TAG);
             CTableEntry tbEncodeEntry = FontEnCodec.tbDirectory.vtTableEntry[iEncodeEntryIndex];
@@ -2333,7 +2377,7 @@ namespace HYFontCodecCS
 
         }   // end of void BulidCMAP()
 
-        public HYRESULT Encodemaxp(HYEncode FontEnCodec)
+        public HYRESULT Encodemaxp(HYEncodeBase FontEnCodec)
         {
             int iEntryIndex = FontEnCodec.tbDirectory.FindTableEntry((UInt32)TABLETAG.MAXP_TAG);
             if (iEntryIndex == -1) return HYRESULT.MAXP_ENCODE;
@@ -2425,7 +2469,7 @@ namespace HYFontCodecCS
 
         }   // end of protected HYRESULT Encodemaxp()
 
-        public HYRESULT Encodehmtx(HYEncode FontEnCodec)
+        public HYRESULT Encodehmtx(HYEncodeBase FontEnCodec)
         {
             int iEntryIndex = FontEnCodec.tbDirectory.FindTableEntry((UInt32)TABLETAG.HMTX_TAG);
             if (iEntryIndex == -1) return HYRESULT.HMTX_ENCODE;

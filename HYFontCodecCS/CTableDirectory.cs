@@ -7,12 +7,22 @@ using System.Threading.Tasks;
 namespace HYFontCodecCS
 {
     public class CTableEntry
-    { 
-    	public UInt32   tag {get;set;}
-		public UInt32   checkSum{get;set;}	
-		public UInt32   offset{get;set;}
-        public UInt32   length{get;set;}
-    
+    {
+        public UInt32 tag;
+        public UInt32 checkSum;
+        public UInt32 offset;
+        public UInt32 length;
+        public byte[] aryTableData;
+
+        public CTableEntry()
+        {
+            tag = 0;
+            checkSum = 0;
+            offset = 0;
+            length = 0;
+            aryTableData=null;
+        }
+
     }   // end of public class CTableEntry
 
 

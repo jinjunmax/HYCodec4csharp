@@ -24,7 +24,6 @@ namespace HYFontCodecCS
                    (value & 0x00FF0000U) >> 8 | (value & 0xFF000000U) >> 24;
 
         }   // end of protected UInt32 hy_cdr_int32_to()
-
         public static UInt64 hy_cdr_int64_to(UInt64 value)
         {
             return (value & 0x00000000000000FFUL) << 56 | (value & 0x000000000000FF00UL) << 40 |
@@ -33,7 +32,6 @@ namespace HYFontCodecCS
                    (value & 0x00FF000000000000UL) >> 40 | (value & 0xFF00000000000000UL) >> 56;
 
         }   // end of protected UInt64 hy_cdr_int64_to()
-
         public static float HY_F2DOT14_to_float(short F2DOT14)
         {
             short sValue;
@@ -86,6 +84,25 @@ namespace HYFontCodecCS
         }	// end of BOOL int HY_RealRount()
 
         /// <summary>
+        /// 通过unicode确定GID
+        /// </summary>
+        /// <param name="chars">字符轮廓集合</param>
+        /// <param name="unicode">UniCode编码</param>
+        /// <returns></returns>
+        public static int GetGlyphsID(CharsInfo chars, UInt32 unicode)
+        {
+            for (int i=0; i< chars.CharInfo.Count; i++)
+            {
+               UInt32 tmpUni = Convert.ToUInt32(chars.CharInfo[i].Unicode);
+                if (unicode == tmpUni)
+                    return i;
+            }
+
+            return -1;
+
+        }   // end of public static int GetGlyphsID()
+
+        /// <summary>
         /// 对齐函数
         /// </summary>
         /// <param name="n"></param>
@@ -97,7 +114,11 @@ namespace HYFontCodecCS
 
         }  // end of uint HY_calc_align()
 
-        //
+        /// <summary>
+        /// 检查是否有重叠点
+        /// </summary>
+        /// <param name="ptLst"></param>
+        /// <returns>ture 有重点，false 无重点</returns>
         public static bool CheckCoincide(List<PtInfo> ptLst)
         {
             for (int i=0; i< ptLst.Count; i++)
@@ -116,7 +137,8 @@ namespace HYFontCodecCS
             }
 
             return false;
-        }
+
+        }   // end of public static bool CheckCoincide()
 
         public static void CountBoundBox(int iGID, ref CharsInfo charsinf, FONTTYPE fntType)
         {

@@ -8,9 +8,9 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("HYFontCodecCS")]
 [assembly: AssemblyDescription("字库文件编解码C#动态库")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("北京汉仪科印信息技术有限公司")]
+[assembly: AssemblyCompany("北京汉仪创新科技股份有限公司")]
 [assembly: AssemblyProduct("HYFontCodecCS")]
-[assembly: AssemblyCopyright("Copyright © Hanyi 2019")]
+[assembly: AssemblyCopyright("Copyright © Hanyi 2019-2022")]
 [assembly: AssemblyTrademark("Hanyi")]
 [assembly: AssemblyCulture("")]
 
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.12")]
-[assembly: AssemblyFileVersion("1.1.12")]
+[assembly: AssemblyVersion("1.1.15")]
+[assembly: AssemblyFileVersion("1.1.15")]

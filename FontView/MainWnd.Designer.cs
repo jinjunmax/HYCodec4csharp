@@ -1,6 +1,6 @@
 ﻿namespace FontView
 {
-    partial class Form1
+    partial class MainWnd
     {
         /// <summary>
         /// Required designer variable.
@@ -55,6 +55,8 @@
             this.edt_ThknssX = new System.Windows.Forms.TextBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.btn_Thickness = new System.Windows.Forms.Button();
+            this.FontInf = new System.Windows.Forms.Button();
+            this.btnChngeCode = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.myPic1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.myPic2)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -188,9 +190,9 @@
             // 
             // button5
             // 
-            this.button5.Location = new System.Drawing.Point(12, 546);
+            this.button5.Location = new System.Drawing.Point(10, 518);
             this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(154, 37);
+            this.button5.Size = new System.Drawing.Size(97, 37);
             this.button5.TabIndex = 15;
             this.button5.Text = "测试";
             this.button5.UseVisualStyleBackColor = true;
@@ -198,9 +200,9 @@
             // 
             // SubSetFont
             // 
-            this.SubSetFont.Location = new System.Drawing.Point(215, 546);
+            this.SubSetFont.Location = new System.Drawing.Point(121, 518);
             this.SubSetFont.Name = "SubSetFont";
-            this.SubSetFont.Size = new System.Drawing.Size(154, 37);
+            this.SubSetFont.Size = new System.Drawing.Size(97, 37);
             this.SubSetFont.TabIndex = 16;
             this.SubSetFont.Text = "抽取子字库";
             this.SubSetFont.UseVisualStyleBackColor = true;
@@ -208,9 +210,9 @@
             // 
             // button6
             // 
-            this.button6.Location = new System.Drawing.Point(418, 546);
+            this.button6.Location = new System.Drawing.Point(232, 518);
             this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(154, 37);
+            this.button6.Size = new System.Drawing.Size(97, 37);
             this.button6.TabIndex = 17;
             this.button6.Text = "TTF To EOT";
             this.button6.UseVisualStyleBackColor = true;
@@ -218,9 +220,9 @@
             // 
             // button7
             // 
-            this.button7.Location = new System.Drawing.Point(621, 546);
+            this.button7.Location = new System.Drawing.Point(343, 518);
             this.button7.Name = "button7";
-            this.button7.Size = new System.Drawing.Size(154, 37);
+            this.button7.Size = new System.Drawing.Size(97, 37);
             this.button7.TabIndex = 18;
             this.button7.Text = "TTF To Woff";
             this.button7.UseVisualStyleBackColor = true;
@@ -228,9 +230,9 @@
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(824, 546);
+            this.button8.Location = new System.Drawing.Point(454, 518);
             this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(154, 37);
+            this.button8.Size = new System.Drawing.Size(97, 37);
             this.button8.TabIndex = 19;
             this.button8.Text = "TTC To FONT";
             this.button8.UseVisualStyleBackColor = true;
@@ -238,9 +240,9 @@
             // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(1027, 546);
+            this.button9.Location = new System.Drawing.Point(565, 518);
             this.button9.Name = "button9";
-            this.button9.Size = new System.Drawing.Size(154, 37);
+            this.button9.Size = new System.Drawing.Size(97, 37);
             this.button9.TabIndex = 20;
             this.button9.Text = "FONTS TO TTC";
             this.button9.UseVisualStyleBackColor = true;
@@ -248,9 +250,9 @@
             // 
             // button10
             // 
-            this.button10.Location = new System.Drawing.Point(10, 614);
+            this.button10.Location = new System.Drawing.Point(676, 518);
             this.button10.Name = "button10";
-            this.button10.Size = new System.Drawing.Size(154, 37);
+            this.button10.Size = new System.Drawing.Size(97, 37);
             this.button10.TabIndex = 21;
             this.button10.Text = "可变数据验证";
             this.button10.UseVisualStyleBackColor = true;
@@ -307,14 +309,14 @@
             this.groupBox1.Controls.Add(this.label4);
             this.groupBox1.Location = new System.Drawing.Point(1027, 285);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(154, 107);
+            this.groupBox1.Size = new System.Drawing.Size(154, 85);
             this.groupBox1.TabIndex = 27;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "变形";
             // 
             // btn_Thickness
             // 
-            this.btn_Thickness.Location = new System.Drawing.Point(60, 63);
+            this.btn_Thickness.Location = new System.Drawing.Point(46, 54);
             this.btn_Thickness.Name = "btn_Thickness";
             this.btn_Thickness.Size = new System.Drawing.Size(75, 23);
             this.btn_Thickness.TabIndex = 28;
@@ -322,11 +324,33 @@
             this.btn_Thickness.UseVisualStyleBackColor = true;
             this.btn_Thickness.Click += new System.EventHandler(this.btn_Thickness_Click);
             // 
-            // Form1
+            // FontInf
+            // 
+            this.FontInf.Location = new System.Drawing.Point(1031, 392);
+            this.FontInf.Name = "FontInf";
+            this.FontInf.Size = new System.Drawing.Size(75, 23);
+            this.FontInf.TabIndex = 28;
+            this.FontInf.Text = "字库信息";
+            this.FontInf.UseVisualStyleBackColor = true;
+            this.FontInf.Click += new System.EventHandler(this.FontInf_Click);
+            // 
+            // btnChngeCode
+            // 
+            this.btnChngeCode.Location = new System.Drawing.Point(793, 518);
+            this.btnChngeCode.Name = "btnChngeCode";
+            this.btnChngeCode.Size = new System.Drawing.Size(97, 37);
+            this.btnChngeCode.TabIndex = 29;
+            this.btnChngeCode.Text = "变更编码";
+            this.btnChngeCode.UseVisualStyleBackColor = true;
+            this.btnChngeCode.Click += new System.EventHandler(this.btnChngeCode_Click);
+            // 
+            // MainWnd
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1199, 688);
+            this.ClientSize = new System.Drawing.Size(1202, 688);
+            this.Controls.Add(this.btnChngeCode);
+            this.Controls.Add(this.FontInf);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.myPic2);
             this.Controls.Add(this.button10);
@@ -349,7 +373,7 @@
             this.Controls.Add(this.PREBTN);
             this.Controls.Add(this.Nextbtn);
             this.Controls.Add(this.liulan);
-            this.Name = "Form1";
+            this.Name = "MainWnd";
             this.Text = "Form1";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
@@ -391,6 +415,8 @@
         private System.Windows.Forms.TextBox edt_ThknssX;
         private System.Windows.Forms.GroupBox groupBox1;
         private System.Windows.Forms.Button btn_Thickness;
+        private System.Windows.Forms.Button FontInf;
+        private System.Windows.Forms.Button btnChngeCode;
     }
 }
 

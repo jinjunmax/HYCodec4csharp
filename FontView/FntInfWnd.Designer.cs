@@ -1,7 +1,7 @@
 ﻿
 namespace FontView
 {
-    partial class Form2
+    partial class FntInfWnd
     {
         /// <summary>
         /// Required designer variable.
@@ -29,12 +29,32 @@ namespace FontView
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.rTBFntInf = new System.Windows.Forms.RichTextBox();
+            this.SuspendLayout();
+            // 
+            // rTBFntInf
+            // 
+            this.rTBFntInf.Location = new System.Drawing.Point(0, 1);
+            this.rTBFntInf.Name = "rTBFntInf";
+            this.rTBFntInf.Size = new System.Drawing.Size(457, 341);
+            this.rTBFntInf.TabIndex = 0;
+            this.rTBFntInf.Text = "";
+            // 
+            // FntInfWnd
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
-            this.Text = "Form2";
+            this.ClientSize = new System.Drawing.Size(461, 344);
+            this.Controls.Add(this.rTBFntInf);
+            this.Name = "FntInfWnd";
+            this.Text = "字库信息";
+            this.Load += new System.EventHandler(this.FntInfWnd_Load);
+            this.ResumeLayout(false);
+
         }
 
         #endregion
+
+        private System.Windows.Forms.RichTextBox rTBFntInf;
     }
 }

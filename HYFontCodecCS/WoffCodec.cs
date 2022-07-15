@@ -28,7 +28,7 @@ namespace HYFontCodecCS
         private List<byte[]> lstSfntcmprstbBuf;
 
         private List<WOFFTableDictEntry> lstWoffTblDict;
-        private HYDecodeC FontDecode;        
+        private HYDecode FontDecode;        
 
         public HYRESULT Sfnt2Woff(string SfntFile, string WoffFile, string MetadataFile)
         {
@@ -78,7 +78,7 @@ namespace HYFontCodecCS
             {
                 try 
                 {
-                    FontDecode  = new HYDecodeC();                    
+                    FontDecode  = new HYDecode();                    
                     HYRESULT rst = FontDecode.FontOpen(SfntFile);
                     if (rst != HYRESULT.NOERROR)  return rst;
 
