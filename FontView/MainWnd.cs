@@ -225,7 +225,7 @@ namespace FontView
                             List<UInt32> lstMssUni = new List<UInt32>();
 
                             DateTime tm1 = DateTime.Now;
-                            //for (int i = 99; i < 100; i++)
+                            //for (int i = 0; i < 100; i++)
                             //{
                             hr = HYFontAPI.ExtractFont(strFontFile, strSubsetName, ref lstUnicode, ref lstMssUni);
                             //}

@@ -99,7 +99,6 @@ namespace HYFontCodecCS
             FontDecode.codemap = new HYCodeMap();
             ushort maxGID = 0;
             byte[] pOutGlyphs = FilterGlyphs(ref FontDecode, ref lstunicode, ref maxGID);
-
             MakeFont(ref FontDecode, pOutGlyphs, strNewTTFFile, maxGID);
 
             FontDecode.FontClose();
@@ -120,12 +119,14 @@ namespace HYFontCodecCS
                 throw;
             }
 
-            HYEncodeBase FontEncode = new HYEncodeBase();
+            HYEncode FontEncode = new HYEncode();
             FontEncode.FontOpen(strNewTTFFile);
 
             FontEncode.FntType = FontDecode.FntType;
             FontEncode.tbDirectory = FontDecode.tbDirectory;
             FontEncode.codemap = FontDecode.codemap;
+            FontEncode.tbMaxp = FontDecode.tbMaxp;
+            FontEncode.tbMaxp.numGlyphs = (ushort)(maxGID+1);
             FontEncode.EncodeTableDirectory();
 
             for (int i = 0; i != FontEncode.tbDirectory.vtTableEntry.Count; i++)
@@ -161,7 +162,6 @@ namespace HYFontCodecCS
                     FontDecode.tbPost.minMemType1 = 0;
                     FontDecode.tbPost.maxMemType1 = 0;
                     Bulidepost(ref FontEncode.FileStrm, ref HYEntry, FontDecode);
-                    
                 }
                 else if(HYEntry.tag == (uint)TABLETAG.HHEA_TAG)
                 {
@@ -173,10 +173,10 @@ namespace HYFontCodecCS
                 }
                 else if (HYEntry.tag == (uint)TABLETAG.MAXP_TAG)
                 {
-                    Buildmaxp(ref FontEncode.FileStrm, ref HYEntry, FontDecode, maxGID);
+                    Buildmaxp(ref FontEncode.FileStrm, ref HYEntry, FontEncode);
                 }
                 else
-                {
+                {   
                     uint iLength = (HYEntry.length + 3) / 4 * 4;
                     byte[] TabelData = new byte[iLength];
                     FontDecode.DecodeStream.Seek(HYEntry.offset, SeekOrigin.Begin);
@@ -377,97 +377,78 @@ namespace HYFontCodecCS
 
         }	// end of void BulidGlyph()
 
-        public HYRESULT Buildmaxp(ref FileStream FWStrm, ref CTableEntry HYEntry, HYDecode FontDecode, ushort imaxGID)
+        public HYRESULT Buildmaxp(ref FileStream FWStrm, ref CTableEntry HYEntry, HYEncode FntEcd)
         {
             HYEntry.offset = (uint)FWStrm.Position;
 
             UInt16 usTmp;
-            byte[] btTmp;            
+            byte[] btTmp;
+            
+            //Table version number
+            usTmp = hy_cdr_int16_to((ushort)FntEcd.tbMaxp.version.value);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);                
+            usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.version.fract);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
 
-            int GlyphNum = imaxGID+1;
-            if (FontType == FONTTYPE.CFF)
-            {
-                //Table version number
-                FontDecode.tbMaxp.version.value = 0;
-                btTmp = BitConverter.GetBytes(FontDecode.tbMaxp.version.value);
-                FWStrm.Write(btTmp, 0, btTmp.Length);
-                FontDecode.tbMaxp.version.fract = 0x5000;
-                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.version.fract);
-                btTmp = BitConverter.GetBytes(usTmp);
-                FWStrm.Write(btTmp, 0, btTmp.Length);
-
-                //numGlyphs
-                FontDecode.tbMaxp.numGlyphs = (UInt16)GlyphNum;
-                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.numGlyphs);
-                btTmp = BitConverter.GetBytes(usTmp);
-                FWStrm.Write(btTmp, 0, btTmp.Length);
-            }
-            else
-            {
-                //Table version number                
-                usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbMaxp.version.value);
-                btTmp = BitConverter.GetBytes(usTmp);
-                FWStrm.Write(btTmp, 0, btTmp.Length);
-
-                usTmp = hy_cdr_int16_to((UInt16)FontDecode.tbMaxp.version.fract);
-                btTmp = BitConverter.GetBytes(FontDecode.tbMaxp.version.fract);
-                FWStrm.Write(btTmp, 0, btTmp.Length);
-                //numGlyphs
-                FontDecode.tbMaxp.numGlyphs = (UInt16)GlyphNum;
-                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.numGlyphs);
-                btTmp = BitConverter.GetBytes(usTmp);
-                FWStrm.Write(btTmp, 0, btTmp.Length);
-               
-                //maxPoints                
-                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.maxPoints);
+            //numGlyphs                
+            usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.numGlyphs);
+            btTmp = BitConverter.GetBytes(usTmp);
+            FWStrm.Write(btTmp, 0, btTmp.Length);
+            
+            if (FntEcd.FntType == FONTTYPE.TTF)
+            {                
+                //maxPoints          
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxPoints);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxContours                
-                usTmp = hy_cdr_int16_to(FontDecode.tbMaxp.maxContours);
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxContours);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxCompositePoints				
-                usTmp = 0;
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxCompositePoints);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
-                //maxCompositeContours
-                usTmp = 0;
+                //maxCompositeContours                
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxCompositeContours);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxZones
-                usTmp = hy_cdr_int16_to(2);
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxZones);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxTwilightPoints
-                usTmp = hy_cdr_int16_to(4);
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxTwilightPoints);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxStorage
-                usTmp = hy_cdr_int16_to(32);
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxStorage);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxFunctionDefs
-                usTmp = hy_cdr_int16_to(96);
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxFunctionDefs);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxInstructionDefs
-                usTmp = hy_cdr_int16_to(96);
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxInstructionDefs);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxStackElements
-                usTmp = hy_cdr_int16_to(256);
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxStackElements);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxSizeOfInstructions
-                usTmp = 0;
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxSizeOfInstructions);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
                 //maxComponentElements
-                usTmp = 0;
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxComponentElements);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
-                //maxComponentDepth
-                usTmp = 0;
+                //maxComponentDepth                
+                usTmp = hy_cdr_int16_to(FntEcd.tbMaxp.maxComponentDepth);
                 btTmp = BitConverter.GetBytes(usTmp);
                 FWStrm.Write(btTmp, 0, btTmp.Length);
             }
@@ -756,7 +737,7 @@ namespace HYFontCodecCS
 
         }	// end of BOOL HYCodeMapSortPredicate()
 
-        void MakeCMAP(ref HYEncodeBase FontEncode)
+        void MakeCMAP(ref HYEncode FontEncode)
         {            
             CCmap cmap = new CCmap();
 
@@ -790,7 +771,7 @@ namespace HYFontCodecCS
 
         }   // end of void MakeCMAP()
 
-        public HYRESULT Encodecmap(ref HYEncodeBase encode, ref CTableEntry HYEntry,List<HYCodeMapItem> lstCodeMap)
+        public HYRESULT Encodecmap(ref HYEncode encode, ref CTableEntry HYEntry,List<HYCodeMapItem> lstCodeMap)
         {
             FileStream FWStrm = encode.FileStrm;
             CCmap Cmap = encode.tbCmap;
@@ -1298,8 +1279,6 @@ namespace HYFontCodecCS
             }
 
         }   // end of protected HYRESULT	EncodeCmapFmt12()
-
-
         public void WriteTableEntry(ref FileStream WrtStrm,  CTableDirectory TbDirectory)
         {
             ushort searchRange = 0;
@@ -1476,94 +1455,16 @@ namespace HYFontCodecCS
             mapItm.GID = 0;
             Decode.codemap.lstCodeMap.Add(mapItm);
 
-            /*
-                        uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];            
-                        for (int i = 0; i < stUni; i++)
-                        {
-                            int iIndex = Decode.FindGryphIndexByUnciode(lstunicode[i]);
-                            if (iIndex > maxGID) 
-                                maxGID = (ushort)iIndex;
-
-                            if (CheckGid(ref Decode.codemap.lstCodeMap, iIndex)) {
-                                HYCodeMapItem cdMapItem = new HYCodeMapItem();
-                                cdMapItem.GID = iIndex;
-                                cdMapItem.Unicode = lstunicode[i];                    
-                                Decode.codemap.lstCodeMap.Add(cdMapItem);
-
-                                uint lca0 = Decode.tbLoca.vtLoca[iIndex];
-                                uint lca1 = Decode.tbLoca.vtLoca[iIndex + 1];
-                                if (lca1 > lca0) {
-                                    Decode.DecodeStream.Seek(entry.offset + lca0, SeekOrigin.Begin);
-
-                                    List<int> vtCmpGID = new List<int>();
-                                    IsCompositeGlyph(ref Decode, ref vtCmpGID);
-                                    for (int j = 0; j < vtCmpGID.Count; j++) {
-                                        if (vtCmpGID[j] > maxGID)
-                                            maxGID = (ushort)vtCmpGID[j];
-
-                                        if (CheckGid(ref Decode.codemap.lstCodeMap, vtCmpGID[j])) {
-                                            if (Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] > Decode.tbLoca.vtLoca[vtCmpGID[j]]){
-                                                ulGlyphsLen += Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] - Decode.tbLoca.vtLoca[vtCmpGID[j]];
-
-                                                HYCodeMapItem item = new HYCodeMapItem();
-                                                item.GID = vtCmpGID[j];
-                                                item.Unicode = 0xffffffff;
-                                                Decode.codemap.lstCodeMap.Add(item);
-                                            }
-                                        }
-                                    }
-                                    ulGlyphsLen += Decode.tbLoca.vtLoca[iIndex + 1] - Decode.tbLoca.vtLoca[iIndex];
-                                }
-                            }
-
-                        }
-            */
-
             uint ulGlyphsLen = Decode.tbLoca.vtLoca[1];
             for (int i = 0; i < stUni; i++)
             {
                 int iIndex = Decode.FindGryphIndexByUnciode(lstunicode[i]);
+                if (iIndex == -1) continue;
+
                 if (iIndex > maxGID)
                     maxGID = (ushort)iIndex;
-
-                if (CheckGid(ref Decode.codemap.lstCodeMap, iIndex))
-                {
-                    HYCodeMapItem cdMapItem = new HYCodeMapItem();
-                    cdMapItem.GID = iIndex;
-                    cdMapItem.Unicode = lstunicode[i];
-                    Decode.codemap.lstCodeMap.Add(cdMapItem);
-
-                    uint lca0 = Decode.tbLoca.vtLoca[iIndex];
-                    uint lca1 = Decode.tbLoca.vtLoca[iIndex + 1];
-                    if (lca1 > lca0)
-                    {
-                        Decode.DecodeStream.Seek(entry.offset + lca0, SeekOrigin.Begin);
-
-                        List<int> vtCmpGID = new List<int>();
-                        IsCompositeGlyph(ref Decode, ref vtCmpGID);
-                        for (int j = 0; j < vtCmpGID.Count; j++)
-                        {
-                            if (vtCmpGID[j] > maxGID)
-                                maxGID = (ushort)vtCmpGID[j];
-
-                            if (CheckGid(ref Decode.codemap.lstCodeMap, vtCmpGID[j]))
-                            {
-                                if (Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] > Decode.tbLoca.vtLoca[vtCmpGID[j]])
-                                {
-                                    ulGlyphsLen += Decode.tbLoca.vtLoca[vtCmpGID[j] + 1] - Decode.tbLoca.vtLoca[vtCmpGID[j]];
-
-                                    HYCodeMapItem item = new HYCodeMapItem();
-                                    item.GID = vtCmpGID[j];
-                                    item.Unicode = 0xffffffff;
-                                    Decode.codemap.lstCodeMap.Add(item);
-                                }
-                            }
-                        }
-
-
-                        ulGlyphsLen += Decode.tbLoca.vtLoca[iIndex + 1] - Decode.tbLoca.vtLoca[iIndex];
-                    }
-                }
+                
+                ulGlyphsLen += GetGlyphBufLength(ref Decode, entry.offset, (ushort)iIndex,ref maxGID);
 
             }
             // 分配好子集字形内存            
@@ -1580,7 +1481,6 @@ namespace HYFontCodecCS
             }
 
             uint iBuffOffset = glyphlenth;
-            //for (int i = 1; i < Decode.tbMaxp.numGlyphs; i++) {
             for (int i = 1; i < maxGID+1; i++) {
                 if (CheckGid(ref Decode.codemap.lstCodeMap, i)){
                     local.vtLoca.Add(iBuffOffset);
@@ -1601,6 +1501,55 @@ namespace HYFontCodecCS
 
         }	// end of int CFontExtract::FilterGlyphs()
 
+        uint GetGlyphBufLength(ref HYDecode Decode, uint offsetTable, ushort GID, ref ushort maxGID)
+        {
+            uint ulLength = 0;
+            if (CheckGid(ref Decode.codemap.lstCodeMap, GID))
+            {
+                uint lca0 = Decode.tbLoca.vtLoca[GID];
+                uint lca1 = Decode.tbLoca.vtLoca[GID + 1];
+                if (lca1 > lca0)
+                {
+                    Decode.DecodeStream.Seek(offsetTable + lca0, SeekOrigin.Begin);
+                    List<int> vtCmpGID = new List<int>();
+                    if (IsCompositeGlyph(ref Decode, ref vtCmpGID))
+                    {
+                        for (int j = 0; j < vtCmpGID.Count; j++)
+                        {
+                            if (vtCmpGID[j] > maxGID)
+                                maxGID = (ushort)vtCmpGID[j];
+
+                            ulLength += GetGlyphBufLength(ref Decode, offsetTable, (ushort)vtCmpGID[j], ref maxGID);
+                        }
+                    }
+                    ulLength += Decode.tbLoca.vtLoca[GID + 1] - Decode.tbLoca.vtLoca[GID];
+
+                    List<uint> szuni = new List<uint>();
+                    Decode.FindGryphUncidoByIndex(GID, ref szuni);
+                    if (szuni.Count == 0)
+                    {
+                        HYCodeMapItem item = new HYCodeMapItem();
+                        item.GID = GID;
+                        item.Unicode = 0xffffffff;
+                        Decode.codemap.lstCodeMap.Add(item);
+                    }
+                    else
+                    {
+                        foreach (uint uni in szuni)
+                        {
+                            HYCodeMapItem item = new HYCodeMapItem();
+                            item.GID = GID;
+                            item.Unicode = uni;
+                            Decode.codemap.lstCodeMap.Add(item);
+                        }
+                    }
+                }
+            }
+
+            return ulLength;
+
+        }   // end of void GetGlyphBufLength()
+
         bool IsCompositeGlyph(ref HYDecode Decode, ref List<int> vtCmpGID)
         {
             ushort usTmp = 0;            
@@ -1610,12 +1559,11 @@ namespace HYFontCodecCS
             Decode.DecodeStream.Read(array, 0, 2);
             short sCmp = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
 
+            // box
+            Decode.DecodeStream.Seek(8, SeekOrigin.Current);
             //numberOfContours
             if (sCmp == -1) {
                 do {
-                    // box
-                    Decode.DecodeStream.Seek(8, SeekOrigin.Current);
-
                     //flags
                     Decode.DecodeStream.Read(array, 0, 2);
                     flags = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
@@ -1677,7 +1625,6 @@ namespace HYFontCodecCS
             return true;
 
         }	// end of BOOL CFontExtract::CheckGid()
-
 
         public HYRESULT ModifyFontInfo(string strFileName, string strNewFileName,HYFontInfo Fntinf)
         {
