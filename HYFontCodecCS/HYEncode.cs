@@ -398,32 +398,48 @@ namespace HYFontCodecCS
 
         public HYRESULT MakeCmap()
         {
+            ulong ulMax = codemap.FindMaxUnicode();
+            ulong ulMin = codemap.FindMinUnicode();
+
+
             Cmap = new CCmap();
             CMAP_TABLE_ENTRY entry = new CMAP_TABLE_ENTRY();
+            
+            if (ulMin<0xffff)
+            {
+                entry = new CMAP_TABLE_ENTRY();
+                entry.plat_ID = 0;
+                entry.plat_encod_ID = 3;
+                entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_4;
+                Cmap.vtCamp_tb_entry.Add(entry);
+            }
 
-            entry = new CMAP_TABLE_ENTRY();
-            entry.plat_ID = 0;
-            entry.plat_encod_ID = 3;
-            entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_4;
-            Cmap.vtCamp_tb_entry.Add(entry);
+            if (ulMax > 0xffff)
+            {
+                entry = new CMAP_TABLE_ENTRY();
+                entry.plat_ID = 0;
+                entry.plat_encod_ID = 4;
+                entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_12;
+                Cmap.vtCamp_tb_entry.Add(entry);
+            }
 
-            entry = new CMAP_TABLE_ENTRY();
-            entry.plat_ID = 0;
-            entry.plat_encod_ID = 4;
-            entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_12;
-            Cmap.vtCamp_tb_entry.Add(entry);
+            if (ulMin < 0xffff)
+            {
+                entry = new CMAP_TABLE_ENTRY();
+                entry.plat_ID = 3;
+                entry.plat_encod_ID = 1;
+                entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_4;
+                Cmap.vtCamp_tb_entry.Add(entry);
+            }
 
-            entry = new CMAP_TABLE_ENTRY();
-            entry.plat_ID = 3;
-            entry.plat_encod_ID = 1;
-            entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_4;
-            Cmap.vtCamp_tb_entry.Add(entry);
-
-            entry = new CMAP_TABLE_ENTRY();
-            entry.plat_ID = 3;
-            entry.plat_encod_ID = 10;
-            entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_12;
-            Cmap.vtCamp_tb_entry.Add(entry);
+            if (ulMax > 0xffff)
+            {
+                entry = new CMAP_TABLE_ENTRY();
+                entry.plat_ID = 3;
+                entry.plat_encod_ID = 10;
+                entry.format = (UInt16)CMAPENCODEFORMAT.CMAP_ENCODE_FT_12;
+                Cmap.vtCamp_tb_entry.Add(entry);
+            }
 
             Cmap.version = 0;
             Cmap.numSubTable = (UInt16)Cmap.vtCamp_tb_entry.Count;

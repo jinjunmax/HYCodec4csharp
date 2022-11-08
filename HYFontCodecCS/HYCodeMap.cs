@@ -66,6 +66,38 @@ namespace HYFontCodecCS
         
         }   // end of public void QuickSortbyUnicode()
 
+        public ulong FindMaxUnicode()
+        {
+            ulong tmp = 0x00;
+            for (int i = 0; i < lstCodeMap.Count; i++)
+            {   
+                if (lstCodeMap[i].Unicode > tmp)
+                {
+                    tmp = lstCodeMap[i].Unicode;
+                }
+            }
+
+            return tmp;
+
+        }   // end of public void FindMaxUnicode()
+
+        public ulong FindMinUnicode()
+        {
+            ulong tmp = 0xffffffff;
+            for (int i = 0; i < lstCodeMap.Count; i++)
+            {   
+                if (lstCodeMap[i].Unicode < tmp)
+                {
+                    tmp= lstCodeMap[i].Unicode;
+                }
+            }
+
+            return tmp;
+
+        }   // end of public void FindMinUnicode()
+
+
+
         public List<HYCodeMapItem> lstCodeMap = new List<HYCodeMapItem>();    
     }
 }

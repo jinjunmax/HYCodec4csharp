@@ -28,7 +28,86 @@ namespace HYFontCodecCS
         private List<byte[]> lstSfntcmprstbBuf;
 
         private List<WOFFTableDictEntry> lstWoffTblDict;
-        private HYDecode FontDecode;        
+        private HYDecode FontDecode;
+
+        public HYRESULT Woff2Sfnt(string strWoffFile, string strSfntFile)
+        {            
+            HYEncode FntEncode = new HYEncode();
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT Woff2Sfnt()
+
+        public HYRESULT DecodeWoff(string WoffFile, ref HYEncode Encode)
+        {
+            
+            FileInfo wofffile = new FileInfo(WoffFile);
+            FileStream strmWoff = wofffile.OpenRead();
+            HYRESULT hr = DecodeWoffHeader(strmWoff, ref Encode);
+            if (hr != HYRESULT.NOERROR) return hr;
+            hr = DecodeWoffTableDictr(strmWoff, ref Encode);
+
+
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT DecodeWoff()
+
+        public HYRESULT DecodeWoffHeader(FileStream strmWoff, ref HYEncode Encode)
+        {            
+            byte[] array = new byte[4];
+
+            //WOFFHeader
+            strmWoff.Read(array, 0, 4);
+            UInt32 iSign = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            if (iSign != 0x774F4646) return HYRESULT.WOFF_DECODE;
+            //sfnt version
+            strmWoff.Read(array, 0, 4);
+            UInt32 iVersin = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            Encode.tbDirectory.version.value = (short)(iVersin >> 16);
+            Encode.tbDirectory.version.fract = (ushort)(iVersin & 0x0000ffff);
+            //wofflength
+            strmWoff.Read(array, 0, 4);
+            UInt32 iwoffLength = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            //numTables
+            strmWoff.Read(array, 0, 2);
+            Encode.tbDirectory.numTables = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
+            //reserved
+            strmWoff.Seek(2, SeekOrigin.Current);
+            //totalSfntSize            
+            UInt32 iFntLngth = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            byte[] Fntbuf = new byte[iFntLngth];
+
+            //majorVersion
+            strmWoff.Read(array, 0, 2);
+            ushort sWfmjrVersion = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
+            //minorVersion
+            strmWoff.Read(array, 0, 2);
+            ushort sWfmnrVersion = hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
+            //metaOffset
+            strmWoff.Read(array, 0, 4);
+            UInt32 uMetaOffset = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            //metaLength
+            UInt32 uMetaLength = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            //metaOrigLength
+            UInt32 uMetaOrigLength = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            //privOffset
+            UInt32 uprivOffset = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+            //privLength
+            UInt32 uprivLength = hy_cdr_int32_to(BitConverter.ToUInt32(array, 0));
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT DecodeWoffHeader()
+
+        public HYRESULT DecodeWoffTableDictr(FileStream strmWoff, ref HYEncode Encode)
+        {
+
+
+
+            return HYRESULT.NOERROR;
+
+        }   // end of public HYRESULT DecodeWoffTableDictr()
 
         public HYRESULT Sfnt2Woff(string SfntFile, string WoffFile, string MetadataFile)
         {
@@ -82,8 +161,8 @@ namespace HYFontCodecCS
                     HYRESULT rst = FontDecode.FontOpen(SfntFile);
                     if (rst != HYRESULT.NOERROR)  return rst;
 
-                    rst = FontDecode.DecodeTableDirectory();
-                    if (rst != HYRESULT.NOERROR)  return rst;
+                    //rst = FontDecode.DecodeTableDirectory();
+                    //if (rst != HYRESULT.NOERROR)  return rst;
 
                     lstSfntOrigtbBuf = new List<byte[]>();
                     for (ushort i = 0; i < FontDecode.tbDirectory.numTables; i++)

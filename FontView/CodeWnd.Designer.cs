@@ -1,7 +1,7 @@
 ﻿
 namespace FontView
 {
-    partial class ChangCodeWnd
+    partial class UpdateFontCodeWnd
     {
         /// <summary>
         /// Required designer variable.
@@ -36,11 +36,12 @@ namespace FontView
             this.tbxSrcCode = new System.Windows.Forms.TextBox();
             this.tbxCvtCode = new System.Windows.Forms.TextBox();
             this.btnConvter = new System.Windows.Forms.Button();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.SuspendLayout();
             // 
             // btnFnt
             // 
-            this.btnFnt.Location = new System.Drawing.Point(402, 24);
+            this.btnFnt.Location = new System.Drawing.Point(392, 35);
             this.btnFnt.Name = "btnFnt";
             this.btnFnt.Size = new System.Drawing.Size(75, 23);
             this.btnFnt.TabIndex = 0;
@@ -50,7 +51,7 @@ namespace FontView
             // 
             // btnSrcCode
             // 
-            this.btnSrcCode.Location = new System.Drawing.Point(402, 72);
+            this.btnSrcCode.Location = new System.Drawing.Point(392, 83);
             this.btnSrcCode.Name = "btnSrcCode";
             this.btnSrcCode.Size = new System.Drawing.Size(75, 23);
             this.btnSrcCode.TabIndex = 1;
@@ -60,7 +61,7 @@ namespace FontView
             // 
             // btnCvtCode
             // 
-            this.btnCvtCode.Location = new System.Drawing.Point(402, 118);
+            this.btnCvtCode.Location = new System.Drawing.Point(392, 129);
             this.btnCvtCode.Name = "btnCvtCode";
             this.btnCvtCode.Size = new System.Drawing.Size(75, 23);
             this.btnCvtCode.TabIndex = 2;
@@ -70,28 +71,28 @@ namespace FontView
             // 
             // tbxFnt
             // 
-            this.tbxFnt.Location = new System.Drawing.Point(37, 25);
+            this.tbxFnt.Location = new System.Drawing.Point(27, 36);
             this.tbxFnt.Name = "tbxFnt";
             this.tbxFnt.Size = new System.Drawing.Size(351, 21);
             this.tbxFnt.TabIndex = 3;
             // 
             // tbxSrcCode
             // 
-            this.tbxSrcCode.Location = new System.Drawing.Point(37, 74);
+            this.tbxSrcCode.Location = new System.Drawing.Point(27, 85);
             this.tbxSrcCode.Name = "tbxSrcCode";
             this.tbxSrcCode.Size = new System.Drawing.Size(351, 21);
             this.tbxSrcCode.TabIndex = 4;
             // 
             // tbxCvtCode
             // 
-            this.tbxCvtCode.Location = new System.Drawing.Point(37, 118);
+            this.tbxCvtCode.Location = new System.Drawing.Point(27, 129);
             this.tbxCvtCode.Name = "tbxCvtCode";
             this.tbxCvtCode.Size = new System.Drawing.Size(351, 21);
             this.tbxCvtCode.TabIndex = 5;
             // 
             // btnConvter
             // 
-            this.btnConvter.Location = new System.Drawing.Point(402, 156);
+            this.btnConvter.Location = new System.Drawing.Point(392, 167);
             this.btnConvter.Name = "btnConvter";
             this.btnConvter.Size = new System.Drawing.Size(75, 23);
             this.btnConvter.TabIndex = 6;
@@ -99,11 +100,20 @@ namespace FontView
             this.btnConvter.UseVisualStyleBackColor = true;
             this.btnConvter.Click += new System.EventHandler(this.btnConvter_Click);
             // 
-            // ChangCodeWnd
+            // groupBox1
+            // 
+            this.groupBox1.Location = new System.Drawing.Point(12, 12);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(483, 200);
+            this.groupBox1.TabIndex = 7;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "更新字库编码";
+            // 
+            // UpdateFontCodeWnd
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(497, 200);
+            this.ClientSize = new System.Drawing.Size(504, 231);
             this.Controls.Add(this.btnConvter);
             this.Controls.Add(this.tbxCvtCode);
             this.Controls.Add(this.tbxSrcCode);
@@ -111,7 +121,8 @@ namespace FontView
             this.Controls.Add(this.btnCvtCode);
             this.Controls.Add(this.btnSrcCode);
             this.Controls.Add(this.btnFnt);
-            this.Name = "ChangCodeWnd";
+            this.Controls.Add(this.groupBox1);
+            this.Name = "UpdateFontCodeWnd";
             this.Text = "ChangCodeWnd";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -127,5 +138,6 @@ namespace FontView
         private System.Windows.Forms.TextBox tbxSrcCode;
         private System.Windows.Forms.TextBox tbxCvtCode;
         private System.Windows.Forms.Button btnConvter;
+        private System.Windows.Forms.GroupBox groupBox1;
     }
 }

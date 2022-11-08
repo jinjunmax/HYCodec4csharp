@@ -93,9 +93,12 @@ namespace HYFontCodecCS
         {
             for (int i=0; i< chars.CharInfo.Count; i++)
             {
-               UInt32 tmpUni = Convert.ToUInt32(chars.CharInfo[i].Unicode);
-                if (unicode == tmpUni)
-                    return i;
+                if (chars.CharInfo[i].Unicode.Length>0)
+                {
+                    UInt32 tmpUni = Convert.ToUInt32(chars.CharInfo[i].Unicode);
+                    if (unicode == tmpUni)
+                        return i;
+                }
             }
 
             return -1;

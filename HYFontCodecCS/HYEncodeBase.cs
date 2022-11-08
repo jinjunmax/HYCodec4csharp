@@ -49,15 +49,12 @@ namespace HYFontCodecCS
         }   // end of public void  FontClose()
 
         public void AlignmentData(uint length)
-        {            
-            if (length % 4 > 0)
+        {   
+            uint iTail = 4 - (length%4);
+            byte c = 0;
+            for (int i = 0; i < iTail; i++)
             {
-                uint iTail = 4 - length % 4;
-                byte c = 0;
-                for (int i = 0; i < iTail; i++)
-                {
-                    FileStrm.WriteByte(c);
-                }
+                FileStrm.WriteByte(c);
             }
 
         }   // end of protected void AlignmentData()
@@ -272,7 +269,6 @@ namespace HYFontCodecCS
             return HYRESULT.NOERROR;
 
         }   // end of protected HYRESULT Decodecmap()
-
         public void EncodeCmapFmt0(ref CMAP_TABLE_ENTRY entry, ref List<byte> vtCmap, List<HYCodeMapItem> lstCodeMap)
         {
             UInt16 usTmp;            
@@ -356,7 +352,9 @@ namespace HYFontCodecCS
                     groupList.Add(group);
                 }
                 ix = nextIx;                
-            }          
+            }
+
+            if (groupList.Count == 0) return 0;
 			
 			UInt32									lastCode = 0;
 			UInt16									entryCount = 0;
@@ -1037,10 +1035,9 @@ namespace HYFontCodecCS
 
         public void EncodeCmapFmt14(ref CMAP_TABLE_ENTRY entry, ref List<byte> vtCmap, List<HYCodeMapItem> lstCodeMap)
         {
-
             
 
-        }   // end of protected HYRESULT	EncodeCmapFmt14()
+        }   // end of protected HYRESULT EncodeCmapFmt14()
 
         public HYRESULT Encodehead()
         {
@@ -1148,130 +1145,6 @@ namespace HYFontCodecCS
             usTmp = hy_cdr_int16_to((UInt16)Head.fontDirectionHint);
             btTmp = BitConverter.GetBytes(usTmp);
             FileStrm.Write(btTmp, 0, btTmp.Length);
-            //indexToLocFormat
-            Head.indexToLocFormat = 1;
-            usTmp = hy_cdr_int16_to((UInt16)Head.indexToLocFormat);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            //glyphDataFormat
-            Head.glyphDataFormat = 0;
-            usTmp = hy_cdr_int16_to((UInt16)Head.glyphDataFormat);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            tbEntry.length = (uint)FileStrm.Position - tbEntry.offset;
-            AlignmentData(tbEntry.length);
-
-            return HYRESULT.NOERROR;
-
-        }   // end of protected HYRESULT Encodehead()   
-
-        public HYRESULT EncodeheadEx()
-        {
-            int iEntryIndex = TableDirectorty.FindTableEntry((UInt32)TABLETAG.HEAD_TAG);
-            if (iEntryIndex == -1) return HYRESULT.HEAD_ENCODE;
-
-            CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            tbEntry.offset = (uint)FileStrm.Position;
-
-            UInt16 usTmp;
-            UInt32 ulTmp;
-            byte[] btTmp;
-
-            //Table version number
-            Head.version.value = 1;
-            usTmp = hy_cdr_int16_to((UInt16)Head.version.value);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            Head.version.fract = 0;
-            usTmp = hy_cdr_int16_to(Head.version.fract);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            //fontRevision			
-            usTmp = hy_cdr_int16_to((UInt16)Head.fontRevision.value);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            usTmp = hy_cdr_int16_to(Head.fontRevision.fract);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            // checkSumAdjustment		
-            ulTmp = hy_cdr_int32_to(Head.checkSumAdjustment);
-            btTmp = BitConverter.GetBytes(ulTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            //magicNumber
-            Head.magicNumber = 0x5F0F3CF5;
-            ulTmp = hy_cdr_int32_to(Head.magicNumber);
-            btTmp = BitConverter.GetBytes(ulTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            //flags
-            usTmp = hy_cdr_int16_to(Head.flags);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            //unitsPerEm
-            usTmp = hy_cdr_int16_to(Head.unitsPerEm);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-
-            //long tspace = 2082844799; // 1904年 1月1日 0点            
-            long FileTimeUtc = 0;
-            DateTime dt0 = new DateTime(1904, 1, 1);
-            DateTime dt1 = System.DateTime.Now.ToUniversalTime();
-            TimeSpan ts = new TimeSpan(dt1.Ticks - dt0.Ticks);
-            FileTimeUtc = (long)ts.TotalSeconds;
-            btTmp = BitConverter.GetBytes(FileTimeUtc);
-            // created
-            if (Head.created == null)
-            {
-                for (int i = 0; i < 8; i++)
-                {
-                    FileStrm.WriteByte(btTmp[7 - i]);
-                }
-            }
-            else
-            {
-                FileStrm.Write(Head.created, 0, 8);
-            }
-
-            //modified
-            for (int i = 0; i < 8; i++)
-            {
-                FileStrm.WriteByte(btTmp[7 - i]);
-            }
-
-            //xMin
-            usTmp = hy_cdr_int16_to((UInt16)Head.xMin);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            //yMin
-            usTmp = hy_cdr_int16_to((UInt16)Head.yMin);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            //xMax
-            usTmp = hy_cdr_int16_to((UInt16)Head.xMax);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            //yMax
-            usTmp = hy_cdr_int16_to((UInt16)Head.yMax);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            //macStyle
-            usTmp = hy_cdr_int16_to((UInt16)Head.macStyle);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            //lowestRecPPEM
-            usTmp = hy_cdr_int16_to((UInt16)Head.lowestRecPPEM);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
-            //fontDirectionHint
-            usTmp = hy_cdr_int16_to((UInt16)Head.fontDirectionHint);
-            btTmp = BitConverter.GetBytes(usTmp);
-            FileStrm.Write(btTmp, 0, btTmp.Length);
             //indexToLocFormat            
             usTmp = hy_cdr_int16_to((UInt16)Head.indexToLocFormat);
             btTmp = BitConverter.GetBytes(usTmp);
@@ -1286,7 +1159,7 @@ namespace HYFontCodecCS
 
             return HYRESULT.NOERROR;
 
-        }   // end of public HYRESULT EncodeheadEx()
+        }   // end of protected HYRESULT Encodehead()
 
         public HYRESULT Encodehhea()
         {

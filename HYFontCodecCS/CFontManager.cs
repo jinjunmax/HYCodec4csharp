@@ -1724,9 +1724,8 @@ namespace HYFontCodecCS
                 CTableEntry HYDecodeEntry = FontDecode.tbDirectory.vtTableEntry[i];
 
                 if (HYDecodeEntry.tag == (uint)TABLETAG.HEAD_TAG)
-                {
-                    //FontEncode.tbHead = FontEncode.tbHead;
-                    FontEncode.EncodeheadEx();
+                {   
+                    FontEncode.Encodehead();
                 }
                 else if (HYDecodeEntry.tag == (uint)TABLETAG.HHEA_TAG)
                 {

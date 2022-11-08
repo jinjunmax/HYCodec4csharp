@@ -224,15 +224,11 @@ namespace FontView
                             string strSubsetName = SubSetDlg.FileName;
                             List<UInt32> lstMssUni = new List<UInt32>();
 
-                            DateTime tm1 = DateTime.Now;
-                            //for (int i = 0; i < 100; i++)
-                            //{
+                            //DateTime tm1 = DateTime.Now;
                             hr = HYFontAPI.ExtractFont(strFontFile, strSubsetName, ref lstUnicode, ref lstMssUni);
-                            //}
-                            DateTime tm2 = DateTime.Now;
-                            double dbspan = (tm2 - tm1).TotalSeconds;
-
-                            MessageBox.Show(dbspan.ToString());
+                            //DateTime tm2 = DateTime.Now;
+                            //double dbspan = (tm2 - tm1).TotalSeconds;
+                            //MessageBox.Show(dbspan.ToString());
 
                             if (hr == HYRESULT.NOERROR)
                             {
@@ -302,7 +298,7 @@ namespace FontView
         {
             string strFontFile;
             OpenFileDialog FntfleDlg = new OpenFileDialog();
-            FntfleDlg.Filter = "truetype files (*.ttf)|*.ttf|All files (*.*)|*.*";
+            FntfleDlg.Filter = "truetype files (*.ttf)|*.ttf|Opentype files (*.otf)|*.otf";
             if (FntfleDlg.ShowDialog() == DialogResult.OK)
             {
                 strFontFile = FntfleDlg.FileName;
@@ -331,7 +327,36 @@ namespace FontView
                     MessageBox.Show(ext.ToString());
                 }
             }
-        }
+        }  // end of button7_Click
+        private void WOFF2TTF_Click(object sender, EventArgs e)
+        {
+            string strwoffFile;
+            OpenFileDialog wffDlg = new OpenFileDialog();
+            wffDlg.Filter = "woff files (*.woff)|*.woff";
+            if (wffDlg.ShowDialog() == DialogResult.OK)
+            {
+                strwoffFile = wffDlg.FileName;
+                try
+                {
+                    SaveFileDialog fontDlg = new SaveFileDialog();
+                    fontDlg.Filter = "truetype files (*.ttf)|*.ttf|Opentype files (*.otf)|*.otf";
+                    if (fontDlg.ShowDialog() == DialogResult.OK)
+                    {
+                        HYRESULT hr;
+                        string strfntName = fontDlg.FileName;
+                        //hr = HYFontAPI.;
+
+                        
+                    }
+                }
+                catch (Exception ext)
+                {
+                    MessageBox.Show(ext.ToString());
+                }
+            }
+
+
+        }   // end of private void WOFF2TTF_Click()
 
         private void button8_Click(object sender, EventArgs e)
         {
@@ -571,9 +596,49 @@ namespace FontView
 
         private void btnChngeCode_Click(object sender, EventArgs e)
         {
-            ChangCodeWnd wndChang = new ChangCodeWnd();
+            UpdateFontCodeWnd wndChang = new UpdateFontCodeWnd();
             wndChang.Show();
 
         }   //end of private void btnChngeCode_Click()
+
+        private void btnMgrFnt_Click(object sender, EventArgs e)
+        {
+            MergeFontWnd wndMergeFont = new MergeFontWnd();
+            wndMergeFont.Show();
+
+        }   // end of private void btnMgrFnt_Click()
+
+        private void btnCodeRmRepeat_Click(object sender, EventArgs e)
+        {
+            string strCodeFile;
+            OpenFileDialog FntfleDlg = new OpenFileDialog();
+            FntfleDlg.Filter = "码表文件 (*.txt)|*.txt|All files (*.*)|*.*";
+            if (FntfleDlg.ShowDialog() == DialogResult.OK)
+            {
+                strCodeFile = FntfleDlg.FileName;
+                try {
+                    SaveFileDialog nwCodeDlg = new SaveFileDialog();
+                    nwCodeDlg.Filter = "码表文件 (*.txt)|*.txt";
+                    if (nwCodeDlg.ShowDialog() == DialogResult.OK)
+                    {   
+                        string strNewCodeTB = nwCodeDlg.FileName;
+
+                        List<uint> lstUni = new List<uint>();
+                        CBase.ReadCodeFile(strCodeFile, ref lstUni);
+                        CBase.UnicodeUnrepeat(ref lstUni);
+
+                        CBase.SaveCodeFile(strNewCodeTB, lstUni);
+
+                        MessageBox.Show("ok");
+                    }
+                }
+                catch (Exception ext)
+                {
+                    MessageBox.Show(ext.ToString());
+                }
+            }
+
+        }   // end of private void btnCodeRmRepeat_Click()
+        
     }
 }

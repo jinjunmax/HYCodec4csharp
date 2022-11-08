@@ -12,7 +12,23 @@ namespace HYFontCodecCS
         {
             version = new HYFIXED();
             fontRevision = new HYFIXED();
-        }
+            checkSumAdjustment = 0;
+            magicNumber = 0x5F0F3CF5;
+            flags = 3;
+            unitsPerEm = 0;
+            created = null;
+            modified = null;
+            xMin = 0;
+            yMin = 0;
+            xMax = 0;
+            yMax = 0;
+            macStyle = 0;
+            lowestRecPPEM = 9;
+            fontDirectionHint = 2;
+            indexToLocFormat = 1;
+            glyphDataFormat = 0;
+
+        }   // end of  public CHead()
 
         public HYFIXED				version;
 		public HYFIXED				fontRevision;

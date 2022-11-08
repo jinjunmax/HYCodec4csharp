@@ -267,8 +267,7 @@ namespace HYFontCodecCS
         public static HYRESULT ExtractFont(string FontName, string SubName, ref List<UInt32> lstUnicode, ref List<UInt32> lstMssUni)
         {
             CFontManager Extract = new CFontManager();
-            //return Extract.ExtractFont(FontName, SubName, lstUnicode, 1, ref lstMssUni);
-
+          //  return Extract.ExtractFont(FontName, SubName, lstUnicode, 1, ref lstMssUni);
             return Extract.GetSubset(FontName, SubName, lstUnicode, 1, ref lstMssUni);
 
         }   // end of public int ExtractFont()

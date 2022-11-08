@@ -92,6 +92,8 @@ namespace HYFontCodecCS
         NO_TTC              =               2203,
         TTC_TO_FONT         =               2204,
         FUNC_PARA	        = 			    3000,
-        EXTRACT_ZERO        =               3100
+        EXTRACT_ZERO        =               3100,
+        WOFF_ENCODE         =               4000,
+        WOFF_DECODE         =               4001   
     }
 }

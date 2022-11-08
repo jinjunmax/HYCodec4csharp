@@ -32,7 +32,6 @@
             this.Nextbtn = new System.Windows.Forms.Button();
             this.PREBTN = new System.Windows.Forms.Button();
             this.richTextBox1 = new System.Windows.Forms.RichTextBox();
-            this.myPic1 = new FontView.GlpyhWnd();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.FindText = new System.Windows.Forms.TextBox();
@@ -48,7 +47,6 @@
             this.button8 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.button10 = new System.Windows.Forms.Button();
-            this.myPic2 = new FontView.GlpyhWnd();
             this.label3 = new System.Windows.Forms.Label();
             this.edt_ThknssY = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
@@ -57,9 +55,15 @@
             this.btn_Thickness = new System.Windows.Forms.Button();
             this.FontInf = new System.Windows.Forms.Button();
             this.btnChngeCode = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize)(this.myPic1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.myPic2)).BeginInit();
+            this.btnMKHanyi = new System.Windows.Forms.Button();
+            this.btnMgrFnt = new System.Windows.Forms.Button();
+            this.btnCodePrss = new System.Windows.Forms.Button();
+            this.myPic2 = new FontView.GlpyhWnd();
+            this.myPic1 = new FontView.GlpyhWnd();
+            this.WOFF2TTF = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.myPic2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.myPic1)).BeginInit();
             this.SuspendLayout();
             // 
             // liulan
@@ -104,17 +108,6 @@
             this.richTextBox1.Size = new System.Drawing.Size(159, 39);
             this.richTextBox1.TabIndex = 6;
             this.richTextBox1.Text = "";
-            // 
-            // myPic1
-            // 
-            this.myPic1.BackColor = System.Drawing.SystemColors.Window;
-            this.myPic1.iMouseSel = -1;
-            this.myPic1.Location = new System.Drawing.Point(-1, 1);
-            this.myPic1.Name = "myPic1";
-            this.myPic1.Size = new System.Drawing.Size(500, 500);
-            this.myPic1.TabIndex = 5;
-            this.myPic1.TabStop = false;
-            this.myPic1.Click += new System.EventHandler(this.myPic1_Click_1);
             // 
             // button1
             // 
@@ -224,13 +217,13 @@
             this.button7.Name = "button7";
             this.button7.Size = new System.Drawing.Size(97, 37);
             this.button7.TabIndex = 18;
-            this.button7.Text = "TTF To Woff";
+            this.button7.Text = "TTF to Woff";
             this.button7.UseVisualStyleBackColor = true;
             this.button7.Click += new System.EventHandler(this.button7_Click);
             // 
             // button8
             // 
-            this.button8.Location = new System.Drawing.Point(454, 518);
+            this.button8.Location = new System.Drawing.Point(583, 518);
             this.button8.Name = "button8";
             this.button8.Size = new System.Drawing.Size(97, 37);
             this.button8.TabIndex = 19;
@@ -240,7 +233,7 @@
             // 
             // button9
             // 
-            this.button9.Location = new System.Drawing.Point(565, 518);
+            this.button9.Location = new System.Drawing.Point(690, 518);
             this.button9.Name = "button9";
             this.button9.Size = new System.Drawing.Size(97, 37);
             this.button9.TabIndex = 20;
@@ -250,23 +243,13 @@
             // 
             // button10
             // 
-            this.button10.Location = new System.Drawing.Point(676, 518);
+            this.button10.Location = new System.Drawing.Point(801, 518);
             this.button10.Name = "button10";
             this.button10.Size = new System.Drawing.Size(97, 37);
             this.button10.TabIndex = 21;
             this.button10.Text = "可变数据验证";
             this.button10.UseVisualStyleBackColor = true;
             this.button10.Click += new System.EventHandler(this.button10_Click);
-            // 
-            // myPic2
-            // 
-            this.myPic2.BackColor = System.Drawing.SystemColors.Window;
-            this.myPic2.iMouseSel = -1;
-            this.myPic2.Location = new System.Drawing.Point(510, 1);
-            this.myPic2.Name = "myPic2";
-            this.myPic2.Size = new System.Drawing.Size(500, 500);
-            this.myPic2.TabIndex = 22;
-            this.myPic2.TabStop = false;
             // 
             // label3
             // 
@@ -336,7 +319,7 @@
             // 
             // btnChngeCode
             // 
-            this.btnChngeCode.Location = new System.Drawing.Point(793, 518);
+            this.btnChngeCode.Location = new System.Drawing.Point(914, 518);
             this.btnChngeCode.Name = "btnChngeCode";
             this.btnChngeCode.Size = new System.Drawing.Size(97, 37);
             this.btnChngeCode.TabIndex = 29;
@@ -344,11 +327,75 @@
             this.btnChngeCode.UseVisualStyleBackColor = true;
             this.btnChngeCode.Click += new System.EventHandler(this.btnChngeCode_Click);
             // 
+            // btnMKHanyi
+            // 
+            this.btnMKHanyi.Location = new System.Drawing.Point(232, 586);
+            this.btnMKHanyi.Name = "btnMKHanyi";
+            this.btnMKHanyi.Size = new System.Drawing.Size(97, 37);
+            this.btnMKHanyi.TabIndex = 30;
+            this.btnMKHanyi.Text = "汉仪字库";
+            this.btnMKHanyi.UseVisualStyleBackColor = true;
+            // 
+            // btnMgrFnt
+            // 
+            this.btnMgrFnt.Location = new System.Drawing.Point(10, 586);
+            this.btnMgrFnt.Name = "btnMgrFnt";
+            this.btnMgrFnt.Size = new System.Drawing.Size(97, 37);
+            this.btnMgrFnt.TabIndex = 31;
+            this.btnMgrFnt.Text = "合并字库";
+            this.btnMgrFnt.UseVisualStyleBackColor = true;
+            this.btnMgrFnt.Click += new System.EventHandler(this.btnMgrFnt_Click);
+            // 
+            // btnCodePrss
+            // 
+            this.btnCodePrss.Location = new System.Drawing.Point(121, 586);
+            this.btnCodePrss.Name = "btnCodePrss";
+            this.btnCodePrss.Size = new System.Drawing.Size(97, 37);
+            this.btnCodePrss.TabIndex = 32;
+            this.btnCodePrss.Text = "码表处理";
+            this.btnCodePrss.UseVisualStyleBackColor = true;
+            this.btnCodePrss.Click += new System.EventHandler(this.btnCodeRmRepeat_Click);
+            // 
+            // myPic2
+            // 
+            this.myPic2.BackColor = System.Drawing.SystemColors.Window;
+            this.myPic2.iMouseSel = -1;
+            this.myPic2.Location = new System.Drawing.Point(510, 1);
+            this.myPic2.Name = "myPic2";
+            this.myPic2.Size = new System.Drawing.Size(500, 500);
+            this.myPic2.TabIndex = 22;
+            this.myPic2.TabStop = false;
+            // 
+            // myPic1
+            // 
+            this.myPic1.BackColor = System.Drawing.SystemColors.Window;
+            this.myPic1.iMouseSel = -1;
+            this.myPic1.Location = new System.Drawing.Point(-1, 1);
+            this.myPic1.Name = "myPic1";
+            this.myPic1.Size = new System.Drawing.Size(500, 500);
+            this.myPic1.TabIndex = 5;
+            this.myPic1.TabStop = false;
+            this.myPic1.Click += new System.EventHandler(this.myPic1_Click_1);
+            // 
+            // WOFF2TTF
+            // 
+            this.WOFF2TTF.Location = new System.Drawing.Point(462, 518);
+            this.WOFF2TTF.Name = "WOFF2TTF";
+            this.WOFF2TTF.Size = new System.Drawing.Size(97, 37);
+            this.WOFF2TTF.TabIndex = 33;
+            this.WOFF2TTF.Text = "Woff to TTF";
+            this.WOFF2TTF.UseVisualStyleBackColor = true;
+            this.WOFF2TTF.Click += new System.EventHandler(this.WOFF2TTF_Click);
+            // 
             // MainWnd
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1202, 688);
+            this.Controls.Add(this.WOFF2TTF);
+            this.Controls.Add(this.btnCodePrss);
+            this.Controls.Add(this.btnMgrFnt);
+            this.Controls.Add(this.btnMKHanyi);
             this.Controls.Add(this.btnChngeCode);
             this.Controls.Add(this.FontInf);
             this.Controls.Add(this.groupBox1);
@@ -377,10 +424,10 @@
             this.Text = "Form1";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Form1_FormClosed);
             this.Load += new System.EventHandler(this.Form1_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.myPic1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.myPic2)).EndInit();
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.myPic2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.myPic1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -417,6 +464,10 @@
         private System.Windows.Forms.Button btn_Thickness;
         private System.Windows.Forms.Button FontInf;
         private System.Windows.Forms.Button btnChngeCode;
+        private System.Windows.Forms.Button btnMKHanyi;
+        private System.Windows.Forms.Button btnMgrFnt;
+        private System.Windows.Forms.Button btnCodePrss;
+        private System.Windows.Forms.Button WOFF2TTF;
     }
 }
 

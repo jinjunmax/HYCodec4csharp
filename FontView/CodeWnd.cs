@@ -8,14 +8,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
+using System.Xml.Serialization;
 using FontParserEntity;
 using HYFontCodecCS;
 
 namespace FontView
 {
-    public partial class ChangCodeWnd : Form
+    public partial class UpdateFontCodeWnd : Form
     {
-        public ChangCodeWnd()
+        public UpdateFontCodeWnd()
         {
             InitializeComponent();
         }
@@ -59,22 +60,69 @@ namespace FontView
             {
                 tbxCvtCode.Text = OFD.FileName;
             }
-        }
 
-        private void ConvterCode(ref HYEncode encde, List<UInt32> lstSrcCode, List<UInt32> lstCnvtCode)
+        }   // end of private void btnCvtCode_Click()
+
+        public static CharInfo DeepCopy<CharInfo>(CharInfo obj)
         {
-            CharsInfo chars = encde.GlyphChars;
-            for (int i=0; i< lstSrcCode.Count; i++)
+            object retval;
+            using (MemoryStream ms = new MemoryStream())
             {
-                UInt32 utmp = lstSrcCode[i];
-                int iGID = HYBase.GetGlyphsID(chars, lstSrcCode[i]);
+                XmlSerializer xml = new XmlSerializer(typeof(CharInfo));
+                xml.Serialize(ms, obj);
+                ms.Seek(0, SeekOrigin.Begin);
+                retval = xml.Deserialize(ms);
+                ms.Close();
+            }
+            return (CharInfo)retval;
 
-                if (i< lstCnvtCode.Count) {
-                    encde.GlyphChars.CharInfo[iGID].Unicode = lstCnvtCode[i].ToString();
+        }   // end of public static CharInfo DeepCopy<CharInfo>()
+
+        private void ConvterCode(ref HYEncode encde, ref HYDecode decode, List<UInt32> lstSrcCode, List<UInt32> lstCnvtCode)
+        {
+            CharsInfo dcdchars = decode.GlyphChars;
+
+            // miss char
+            encde.GlyphChars.CharInfo = new List<CharInfo>();
+            encde.GlyphChars.CharInfo.Add(dcdchars.CharInfo[0]);
+            
+            for (int i=1; i< decode.tbMaxp.numGlyphs; i++)
+            {   
+                CharInfo inf = new CharInfo();
+                inf = DeepCopy(dcdchars.CharInfo[i]);
+
+                List<UInt32> lstUni = new List<uint>();
+                decode.UnicodeStringToList(inf.Unicode, ref lstUni);
+
+                int srcID = -1;
+                for (int j = 0; j < lstUni.Count;j++)
+                {
+                    srcID = FindID(lstSrcCode, lstUni[j]);
+                    if (srcID != -1)
+                        break;
                 }
+
+                if (srcID !=-1)
+                {
+                    inf.Unicode = lstCnvtCode[srcID].ToString();
+                    inf.Name = "uni" + Convert.ToString(Convert.ToInt32(inf.Unicode), 16).ToUpper();
+                }
+                encde.GlyphChars.CharInfo.Add(inf);
             }
 
         }   // end of private void ConvterCode()
+
+        private int FindID(List<UInt32> lstSrcCode, UInt32 uni)
+        {
+            for (int i=0;i<lstSrcCode.Count; i++)  {
+                if (lstSrcCode[i] == uni)
+                    return i;
+            }
+
+            return -1;
+
+        }   // end of private int FindID()
+
         /// <summary>
         /// 解码字库
         /// </summary>        
@@ -121,15 +169,19 @@ namespace FontView
             ecd.tbMaxp = dcd.tbMaxp;
             ecd.tbHead = dcd.tbHead;
             ecd.tbCmap = dcd.tbCmap;
-            ecd.GlyphChars = dcd.GlyphChars;
+            if (dcd.tbPost.version.value == 3 && dcd.tbPost.version.fract==0)
+            {
+                ecd.tbPost = dcd.tbPost;
+            }
 
         }   //end of private void CopyTable()
-
         private void EncodeFont(HYEncode ecd)
         {
             ecd.MakeCodeMap();
             ecd.MakeCmap();
-            ecd.MakePost();
+
+            if (ecd.tbPost.version.value==2&& ecd.tbPost.version.fract==0)
+                ecd.MakePost();
 
             ecd.EncodeTableDirectory();
 
@@ -159,6 +211,10 @@ namespace FontView
                 else if (tbEntrt.tag == (int)TABLETAG.LOCA_TAG)
                 {
                     ecd.Encodeloca();
+                }
+                else if (tbEntrt.tag == (int)TABLETAG.CFF_TAG)
+                {
+                    ecd.EncodeCFF();
                 }
                 else
                 {
@@ -210,7 +266,7 @@ namespace FontView
 
             DecodeFont(ref dcd);
             CopyTable(ref ecd, ref dcd);
-            ConvterCode(ref ecd, lstSrcCode, lstCnvtCode);
+            ConvterCode(ref ecd, ref dcd,lstSrcCode, lstCnvtCode);
 
             if (!(ecd.FontOpen(strEncodeFnt) == HYRESULT.NOERROR))
             {
@@ -221,6 +277,8 @@ namespace FontView
             EncodeFont(ecd);
             ecd.FontClose();
             ecd.SetCheckSumAdjustment(strEncodeFnt);
+
+            MessageBox.Show("操作完成");
 
         }   // end of private void btnConvter_Click()
     }

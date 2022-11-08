@@ -70,7 +70,6 @@ namespace HYFontCodecCS
             return HYRESULT.NOERROR;
 
         }   //end of public HYRESULT GetTable()
-
         public HYRESULT GetTableData(UInt32 tag, ref CTableEntry tableData)
         {
             if(FileStrm !=null)
@@ -90,6 +89,8 @@ namespace HYFontCodecCS
             return HYRESULT.NOERROR;
 
         }   // end of public HYRESULT GetTableData()
+
+        //解码字库指定表,其它表不做处理
         public HYRESULT FontDecode(string strFileName)
         {
             try
@@ -160,67 +161,6 @@ namespace HYFontCodecCS
             return HYRESULT.NOERROR;
 
         }   // end of public HYRESULT FontDecode()
-
-        public HYRESULT FontDecode1(string strFileName, List<uint> lstUni)
-        {
-            try
-            {
-                FileStrm = new FileStream(strFileName, FileMode.Open, FileAccess.Read, FileShare.Read);
-            }
-            catch
-            {
-                throw;
-            }
-            Chars = new FontParserEntity.CharsInfo();
-
-            HYRESULT rtResult;
-            // 获取字典目录
-            DecodeTableDirectory();
-
-            rtResult = DecodeMaxp();
-            if (rtResult != HYRESULT.NOERROR) return rtResult;
-            // 解析Head表
-            rtResult = DecodeHead();
-            if (rtResult != HYRESULT.NOERROR) return rtResult;
-            // 解析CMAP表
-            rtResult = DecodeCmap();
-            if (rtResult != HYRESULT.NOERROR) return rtResult;
-            // 解析POST表
-            rtResult = DecodePost();
-            if (rtResult != HYRESULT.NOERROR) return rtResult;
-
-            if (FontType == FONTTYPE.TTF)
-            {
-                Chars.Type = "TrueType";
-                // 解析LOCA表
-                rtResult = DecodeLoca();
-                if (rtResult != HYRESULT.NOERROR) return rtResult;
-                // 解析GLYPH表
-                DecodeGlyph1(lstUni);
-                if (rtResult != HYRESULT.NOERROR) return rtResult;
-            }
-            if (FontType == FONTTYPE.CFF)
-            {
-                return HYRESULT.NO_TTF;
-            }
-
-            // 解析Name表
-            rtResult = DecodeName();
-            if (rtResult != HYRESULT.NOERROR) return rtResult;
-            // 解析HHEA表
-            rtResult = DecodeHhea();
-            if (rtResult != HYRESULT.NOERROR) return rtResult;
-            // 解析HMTX表
-            rtResult = DecodeHmtx1(lstUni);
-            if (rtResult != HYRESULT.NOERROR) return rtResult;
-
-            if (FileStrm != null)
-            {
-                FileStrm.Close();
-            }
-            return HYRESULT.NOERROR;
-
-        }   // end of public HYRESULT FontDecode1()
 
         public HYRESULT DecodeTableDirectory()
 	    {            
@@ -990,8 +930,8 @@ namespace HYFontCodecCS
                     charinf.Section += (xMax - xMin).ToString() + ",";
                     charinf.Section += (yMax - yMin).ToString();
 
-                    //charinf.AdHeight = GetGlyfAdvancHeight(i);
-                    //charinf.AdWidth = GetGlyfAdvancWidth(i);
+                    charinf.AdHeight = GetGlyfAdvancHeight(i);
+                    charinf.AdWidth = GetGlyfAdvancWidth(i);
 
                     if (charinf.ContourCount > 0)
                     {
@@ -1013,72 +953,6 @@ namespace HYFontCodecCS
             return HYRESULT.NOERROR;
 
         }   // end of protected HYRESULT DecodeGlyph()
-
-        public HYRESULT DecodeGlyph1(List<uint> lstuni)
-        {
-            byte[] array = new byte[4];
-
-            int iEntryIndex = TableDirectorty.FindTableEntry((uint)TABLETAG.GLYF_TAG);
-            if (iEntryIndex == -1) return HYRESULT.GLYF_DECODE;
-            CTableEntry tbEntry = TableDirectorty.vtTableEntry[iEntryIndex];
-            FileStrm.Seek(tbEntry.offset, SeekOrigin.Begin);
-
-            long TableStartPoint = FileStrm.Position;
-            for (int i = 0; i < lstuni.Count; i++)
-            {
-                int iIndex = FindGryphIndexByUnciode(lstuni[i]);
-                if (iIndex!=-1)
-                {
-                    CharInfo charinf = new CharInfo();
-                    charinf.Id = iIndex;
-                    charinf.Name = Post.FindNameByGID((ushort)iIndex);
-                    charinf.Unicode = Convert.ToString(lstuni[i], 10);
-
-                    if (Loca.vtLoca[iIndex] < Loca.vtLoca[iIndex + 1])
-                    {
-                        FileStrm.Seek(TableStartPoint + Loca.vtLoca[iIndex], SeekOrigin.Begin);
-
-                        FileStrm.Read(array, 0, 2);
-                        charinf.ContourCount = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-
-                        FileStrm.Read(array, 0, 2);
-                        Int16 xMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                        FileStrm.Read(array, 0, 2);
-                        Int16 yMin = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                        FileStrm.Read(array, 0, 2);
-                        Int16 xMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-                        FileStrm.Read(array, 0, 2);
-                        Int16 yMax = (Int16)hy_cdr_int16_to(BitConverter.ToUInt16(array, 0));
-
-                        charinf.Section = xMin.ToString() + ",";
-                        charinf.Section += yMin.ToString() + ",";
-                        charinf.Section += (xMax - xMin).ToString() + ",";
-                        charinf.Section += (yMax - yMin).ToString();
-
-                        //charinf.AdHeight = GetGlyfAdvancHeight(iIndex);
-                        //charinf.AdWidth = GetGlyfAdvancWidth(iIndex);
-
-                        if (charinf.ContourCount > 0)
-                        {
-                            charinf.IsComponent = 0;
-                            DecodeGLYF_SIMPLE(charinf);
-                        }
-                        else
-                        {
-                            charinf.IsComponent = 1;
-                            DecodeGLYF_COMPOS(charinf);
-                        }
-                    }
-                    if (Chars != null)
-                    {
-                        Chars.CharInfo.Add(charinf);
-                    }
-                }                
-            }
-
-            return HYRESULT.NOERROR;
-
-        }   // end of public HYRESULT DecodeGlyph1()
 
         public HYRESULT DecodeHhea()
         {
